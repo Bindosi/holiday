@@ -1,0 +1,185 @@
+/* Zenji Cards: shared look for the gallery, the card makers and the payment/share sheets.
+   Each card brings its own stage styles; this file is the shell around them. */
+:root {
+  --paper: #f7f4fb;
+  --panel: #ffffff;
+  --ink: #1e1530;
+  --ink-2: #5d5470;
+  --line: #e4ddef;
+  --saffron: #ffb000;
+  --magenta: #e8457c;
+  --plum: #3b1f5e;
+  --good: #1f8a4c;
+  --bad: #c62f3a;
+  --focus: #7c4dff;
+  --radius: 16px;
+  --display: "Shrikhand", "Cooper Black", Georgia, serif;
+  --body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #150f22;
+    --panel: #201833;
+    --ink: #f4eefc;
+    --ink-2: #b9aecd;
+    --line: #3a2e52;
+    --plum: #d8c4ff;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.5 var(--body);
+}
+a { color: inherit; }
+button, input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* ---------- top bar ---------- */
+.zc-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 14px max(16px, env(safe-area-inset-left, 0px));
+}
+.zc-logo { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 800; letter-spacing: -.01em; }
+.zc-logo b { font-family: var(--display); font-weight: 400; font-size: 22px; color: var(--magenta); }
+.zc-logo span { font-size: 13px; color: var(--ink-2); font-weight: 600; }
+.zc-top nav { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ---------- buttons and fields ---------- */
+.zc-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 12px 22px; border-radius: 999px; border: 0;
+  background: var(--ink); color: var(--paper); font-weight: 700; cursor: pointer; text-decoration: none;
+}
+.zc-btn.primary { background: var(--magenta); color: #fff; box-shadow: 0 8px 22px rgba(232, 69, 124, .3); }
+.zc-btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+.zc-btn.small { min-height: 38px; padding: 8px 14px; font-size: 14px; }
+.zc-btn[disabled] { opacity: .55; cursor: wait; }
+.zc-btn.block { width: 100%; }
+
+.zc-field { display: grid; gap: 6px; }
+.zc-field > span { font-weight: 700; font-size: 14px; }
+.zc-field small { color: var(--ink-2); font-size: 13px; }
+.zc-field input, .zc-field textarea, .zc-field select {
+  width: 100%; padding: 12px 14px; border-radius: 12px;
+  border: 1.5px solid var(--line); background: var(--panel); min-height: 48px;
+}
+.zc-field textarea { min-height: 96px; resize: vertical; }
+.zc-field input:focus, .zc-field textarea:focus, .zc-field select:focus { border-color: var(--focus); outline: none; }
+.zc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 420px) { .zc-row { grid-template-columns: 1fr; } }
+
+/* ---------- maker layout: form + live phone preview ---------- */
+.zc-maker {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 28px; align-items: start;
+  max-width: 1080px; margin: 0 auto;
+  padding: 8px max(16px, env(safe-area-inset-right, 0px)) 120px max(16px, env(safe-area-inset-left, 0px));
+}
+.zc-maker h1 { font-family: var(--display); font-weight: 400; font-size: clamp(30px, 6vw, 44px); line-height: 1.05; margin: 4px 0 6px; text-wrap: balance; }
+.zc-maker .lead { color: var(--ink-2); margin: 0 0 20px; max-width: 46ch; }
+.zc-form { display: grid; gap: 16px; min-width: 0; }
+.zc-form fieldset { border: 1.5px solid var(--line); border-radius: var(--radius); padding: 14px; display: grid; gap: 12px; margin: 0; }
+.zc-form legend { font-weight: 800; padding: 0 6px; }
+.zc-preview-wrap { position: sticky; top: 16px; display: grid; gap: 10px; justify-items: center; }
+.zc-phone {
+  width: min(100%, 360px); aspect-ratio: 9 / 17; border-radius: 34px; overflow: hidden; position: relative;
+  border: 10px solid #120c1d; background: #000; box-shadow: 0 30px 60px rgba(30, 21, 48, .25);
+}
+.zc-phone .zc-stage { position: absolute; inset: 0; }
+.zc-preview-note { font-size: 13px; color: var(--ink-2); text-align: center; }
+.zc-paybar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--panel) 92%, transparent); backdrop-filter: blur(10px);
+  border-top: 1px solid var(--line);
+  display: flex; gap: 12px; align-items: center; justify-content: center;
+}
+.zc-paybar .price { font-weight: 700; color: var(--ink-2); font-size: 14px; }
+@media (max-width: 860px) {
+  .zc-maker { grid-template-columns: 1fr; }
+  .zc-preview-wrap { position: static; order: -1; }
+  .zc-phone { width: min(100%, 290px, calc(58vh * 9 / 17)); }
+}
+
+/* photo picker */
+.zc-photos { display: flex; gap: 10px; flex-wrap: wrap; }
+.zc-photo {
+  width: 84px; height: 84px; border-radius: 12px; border: 1.5px dashed var(--line); background: var(--panel) center/cover no-repeat;
+  display: grid; place-items: center; cursor: pointer; font-size: 13px; color: var(--ink-2); text-align: center; position: relative;
+}
+.zc-photo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.zc-photo.busy::after { content: "…"; position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.4); color: #fff; border-radius: 12px; }
+
+/* ---------- sheets (payment, share) ---------- */
+.zc-sheet-back {
+  position: fixed; inset: 0; z-index: 50; background: rgba(12, 6, 24, .55); display: grid; align-items: end; justify-items: center;
+}
+.zc-sheet {
+  width: min(100%, 520px); max-height: 92vh; overflow: auto; background: var(--panel); color: var(--ink);
+  border-radius: 24px 24px 0 0;
+  padding: 22px max(18px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
+  display: grid; gap: 16px; animation: zc-up .28s ease-out;
+}
+@media (min-width: 700px) { .zc-sheet-back { align-items: center; } .zc-sheet { border-radius: 24px; } }
+@keyframes zc-up { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+.zc-sheet h2 { margin: 0; font-size: 22px; line-height: 1.2; }
+.zc-sheet p { margin: 0; color: var(--ink-2); }
+.zc-close { justify-self: end; background: none; border: 0; font-size: 15px; font-weight: 700; color: var(--ink-2); cursor: pointer; padding: 4px; }
+.zc-options { display: grid; gap: 10px; }
+.zc-option {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+  padding: 14px; border-radius: 14px; border: 2px solid var(--line); cursor: pointer; background: var(--panel);
+}
+.zc-option:has(input:checked) { border-color: var(--magenta); background: color-mix(in srgb, var(--magenta) 7%, var(--panel)); }
+.zc-option input { accent-color: var(--magenta); width: 20px; height: 20px; }
+.zc-option b { display: block; }
+.zc-option small { color: var(--ink-2); }
+.zc-option .amt { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.zc-paylogos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.zc-paylogos span { font-size: 11px; font-weight: 800; letter-spacing: .02em; padding: 3px 7px; border-radius: 6px; background: var(--paper); border: 1px solid var(--line); }
+.zc-check { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
+.zc-check input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--magenta); }
+.zc-error { color: var(--bad); font-weight: 600; }
+.zc-note { font-size: 13px; color: var(--ink-2); }
+.zc-divider { display: flex; align-items: center; gap: 10px; color: var(--ink-2); font-size: 13px; }
+.zc-divider::before, .zc-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.zc-linkbox { display: flex; gap: 8px; align-items: stretch; }
+.zc-linkbox input { flex: 1; min-width: 0; padding: 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--paper); font-size: 14px; }
+.zc-share { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.zc-wa { background: #25d366; color: #062b14; }
+.zc-big-code { font: 800 28px/1.1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .06em; text-align: center; padding: 16px; border-radius: 14px; background: var(--paper); border: 2px dashed var(--saffron); user-select: all; }
+.zc-spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--magenta); animation: zc-spin .8s linear infinite; }
+@keyframes zc-spin { to { transform: rotate(360deg); } }
+
+/* ---------- viewer chrome (on top of a card) ---------- */
+.zc-view { position: fixed; inset: 0; }
+.zc-view .zc-stage { position: absolute; inset: 0; }
+.zc-foot {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;
+  padding: 8px max(16px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  font: 600 12px/1.4 var(--body); color: rgba(255, 255, 255, .78); text-shadow: 0 1px 2px rgba(0,0,0,.4); pointer-events: none;
+}
+.zc-foot a, .zc-foot button { pointer-events: auto; color: inherit; background: none; border: 0; padding: 4px; font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.zc-foot.dark { color: rgba(30, 21, 48, .7); text-shadow: none; }
+
+/* "Tap to open" cover that unlocks sound and motion */
+.zc-cover {
+  position: absolute; inset: 0; z-index: 15; display: grid; place-items: center; text-align: center;
+  padding: 24px max(24px, env(safe-area-inset-right, 0px)) 24px max(24px, env(safe-area-inset-left, 0px));
+  background: rgba(10, 6, 20, .72); backdrop-filter: blur(5px); color: #fff;
+}
+.zc-cover .box { display: grid; gap: 16px; justify-items: center; max-width: 340px; }
+.zc-cover h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(28px, 8vw, 40px); line-height: 1.1; text-wrap: balance; }
+.zc-cover p { margin: 0; opacity: .85; line-height: 1.45; }
+.zc-cover .zc-btn { background: var(--saffron); color: #1e1530; }
+.zc-msg { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 28px; color: #fff; background: #1e1530; }
+.zc-msg .box { display: grid; gap: 14px; justify-items: center; max-width: 360px; }
+.zc-msg h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 30px; }
+
+@media (prefers-reduced-motion: reduce) { .zc-sheet { animation: none; } }

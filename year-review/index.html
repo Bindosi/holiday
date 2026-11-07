@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1b1035">
+<title>Our Year in Review · Zenji Cards</title>
+<meta name="description" content="A story-style recap of your year together, to send to a friend or partner.">
+<meta property="og:title" content="Our year, in review ✨">
+<meta property="og:description" content="Tap through our year.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Figtree:wght@400;600;700;800;900&display=swap">
+<link rel="stylesheet" href="../assets/zc.css">
+<link rel="icon" href="../assets/icon-180.png">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<style>
+  /* Year-in-review stage: full-screen story slides with progress bars, like a status update. */
+  .yr { position: absolute; inset: 0; overflow: hidden; color: #fff; font-family: var(--body); -webkit-user-select: none; user-select: none; background: #1b1035; }
+  .yr .bars { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; gap: 4px; z-index: 5; }
+  .yr .bar { flex: 1; height: 3px; border-radius: 3px; background: rgba(255,255,255,.3); overflow: hidden; }
+  .yr .bar i { display: block; height: 100%; width: 0; background: #fff; }
+  .yr .slide { position: absolute; inset: 0; display: grid; align-content: center; gap: 14px; padding: 60px 26px 70px; opacity: 0; transition: opacity .35s; }
+  .yr .slide.on { opacity: 1; }
+  .yr .kicker { font-weight: 900; letter-spacing: .14em; text-transform: uppercase; font-size: 13px; opacity: .85; }
+  .yr .big { font-family: var(--display); font-weight: 400; font-size: clamp(34px, 12cqw, 64px); line-height: 1.02; margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+  .yr .text { font-size: clamp(20px, 6.6cqw, 30px); font-weight: 800; line-height: 1.25; margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+  .yr .photo { width: 100%; max-height: 42cqh; object-fit: cover; border-radius: 18px; box-shadow: 0 16px 40px rgba(0,0,0,.35); transform: rotate(-2deg); }
+  .yr .num { font-family: var(--display); font-size: clamp(90px, 38cqw, 200px); line-height: .9; opacity: .2; position: absolute; right: -6px; bottom: 40px; pointer-events: none; }
+  .yr .tapzones { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 2fr; z-index: 4; }
+  .yr .tapzones button { background: none; border: 0; cursor: pointer; }
+  .yr .replay { justify-self: start; background: #fff; color: #1b1035; border: 0; border-radius: 999px; padding: 12px 22px; font-weight: 800; cursor: pointer; position: relative; z-index: 6; }
+  .yr .from { font-family: var(--display); font-size: 22px; }
+  @media (prefers-reduced-motion: reduce) { .yr .slide { transition: none; } }
+  .zc-stage { container-type: size; }
+</style>
+</head>
+<body>
+<script src="../assets/zc.js"></script>
+<script>
+(() => {
+  // [field key, kicker shown on the slide, background]
+  const PROMPTS = [
+    ["funniest", "The funniest moment", "linear-gradient(160deg,#ff7a45,#e8457c)"],
+    ["trip", "Best trip together", "linear-gradient(160deg,#00a6a6,#1b6ca8)"],
+    ["joke", "Our inside joke", "linear-gradient(160deg,#9b6bff,#5b2ee0)"],
+    ["best", "The best day", "linear-gradient(160deg,#ffb000,#ff6a3d)"],
+    ["learned", "What I learned from you", "linear-gradient(160deg,#2bb673,#0b7a75)"],
+    ["wish", "For next year", "linear-gradient(160deg,#e8457c,#7b1fa2)"],
+  ];
+  const SLIDE_MS = 6000;
+
+  ZC.card({
+    type: "year-review",
+    name: "Our year in review",
+    lead: "Answer a few quick prompts and they get a swipeable story of your year: funny moments, trips, inside jokes and a wish for next year.",
+    defaults: {
+      to: "", from: "", year: String(new Date().getFullYear()), title: "Our year",
+      funniest: "When you fell asleep in the bajaji and missed our stop. Twice.",
+      trip: "Mnemba sandbank at sunrise.",
+      joke: "“Pole pole” means ‘run’, apparently.",
+      best: "", learned: "", wish: "More trips, fewer excuses. Same us.",
+    },
+    fields: [
+      { type: "row", fields: [
+        { key: "to", label: "Their name", required: true, max: 30, placeholder: "Zuhura" },
+        { key: "from", label: "From", max: 40, placeholder: "Your name" },
+      ] },
+      { type: "row", fields: [
+        { key: "title", label: "Title", max: 30, required: true, help: "Our year, Best friends, Team Dar…" },
+        { key: "year", label: "Year", max: 9 },
+      ] },
+      ...PROMPTS.map(([key, label]) => ({ key, label, type: "textarea", rows: 2, max: 220, placeholder: "Leave empty to skip this slide" })),
+    ],
+    photos: 3,
+    photoLabel: "Photos for the slides (optional, up to 3)",
+    validate: (d) => (PROMPTS.some(([k]) => String(d[k] || "").trim()) ? null : "Fill in at least one prompt."),
+    title: (d) => (d.title || "Our year") + " " + (d.year || "") + " · " + (d.to || ""),
+    shareText: (d) => (d.to ? d.to + ", " : "") + "here's our " + (d.year || "year") + " ✨ Tap through:",
+    coverTitle: (d) => (d.to ? d.to + ", here's" : "Here's") + " our " + (d.year || "year"),
+    coverText: () => "Tap the right side to go forward, left to go back. Hold to pause.",
+    coverButton: "Start",
+
+    render(root, d, ctx) {
+      const { h } = ctx;
+      const slides = [];
+      let photoIdx = 0;
+      slides.push({ bg: "linear-gradient(160deg,#1b1035,#4a1d7a)", kids: [
+        h("div", { class: "kicker", text: (d.year || "") + " recap" }),
+        h("h1", { class: "big", text: (d.title || "Our year") + ", " + (d.to || "you") }),
+        h("p", { class: "text", text: "Tap to start →" }),
+      ] });
+      PROMPTS.forEach(([key, kicker, bg], i) => {
+        const v = String(d[key] || "").trim();
+        if (!v) return;
+        const photo = ctx.photos[photoIdx] ? ctx.photos[photoIdx++] : null; // photos go on the first slides, in order
+        slides.push({ bg, kids: [
+          h("div", { class: "num", text: String(slides.length), "aria-hidden": "true" }),
+          h("div", { class: "kicker", text: kicker }),
+          photo ? h("img", { class: "photo", src: photo, alt: "" }) : null,
+          h("p", { class: "text", text: v }),
+        ] });
+      });
+      const replay = h("button", { class: "replay", type: "button", text: "Watch again" });
+      slides.push({ bg: "linear-gradient(160deg,#e8457c,#ffb000)", end: true, kids: [
+        h("div", { class: "kicker", text: "That was " + (d.year || "our year") }),
+        h("h2", { class: "big", text: "Here's to the next one." }),
+        d.from ? h("div", { class: "from", text: "— " + d.from }) : null,
+        replay,
+      ] });
+
+      const bars = h("div", { class: "bars" }, slides.map(() => h("div", { class: "bar" }, h("i"))));
+      const els = slides.map((s) => h("section", { class: "slide", style: { background: s.bg } }, s.kids));
+      const back = h("button", { type: "button", "aria-label": "Previous" }), fwd = h("button", { type: "button", "aria-label": "Next" });
+      const zones = h("div", { class: "tapzones" }, back, fwd);
+      const box = h("div", { class: "yr" }, ...els, bars, zones);
+      root.append(box);
+
+      let i = 0, t0 = performance.now(), paused = false, pausedAt = 0, raf = 0, running = false;
+      function show(n) {
+        i = Math.max(0, Math.min(slides.length - 1, n));
+        els.forEach((el, k) => el.classList.toggle("on", k === i));
+        bars.querySelectorAll("i").forEach((b, k) => (b.style.width = k < i ? "100%" : "0%"));
+        t0 = performance.now();
+        zones.style.pointerEvents = slides[i].end ? "none" : "";
+        if (ctx.sound.on && running) ctx.sound.tone(660 + i * 40, 0, 0.15, 0.05, "sine");
+        if (slides[i].end && running) ctx.confetti({ count: 100 });
+      }
+      function loop(t) {
+        if (!paused && running && !slides[i].end) {
+          const p = (t - t0) / SLIDE_MS;
+          bars.children[i].firstChild.style.width = Math.min(100, p * 100) + "%";
+          if (p >= 1) show(i + 1);
+        }
+        raf = requestAnimationFrame(loop);
+      }
+      back.addEventListener("click", () => show(i - 1));
+      fwd.addEventListener("click", () => show(i + 1));
+      zones.addEventListener("pointerdown", () => { paused = true; pausedAt = performance.now(); });
+      const resume = () => { if (paused) { t0 += performance.now() - pausedAt; paused = false; } };
+      zones.addEventListener("pointerup", resume); zones.addEventListener("pointerleave", resume); zones.addEventListener("pointercancel", resume);
+      replay.addEventListener("click", () => show(0));
+      show(0);
+      raf = requestAnimationFrame(loop);
+      return {
+        start() { running = true; t0 = performance.now(); },
+        destroy() { cancelAnimationFrame(raf); },
+      };
+    },
+  });
+})();
+</script>
+</body>
+</html>

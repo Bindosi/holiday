@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e7c66">
+<title>How Well Do You Know Me · Zenji Cards</title>
+<meta name="description" content="Make a quiz about yourself, send it to friends and see who knows you best.">
+<meta property="og:title" content="How well do you know me? 🤔">
+<meta property="og:description" content="Take my quiz and get on the leaderboard.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Figtree:wght@400;600;700;800;900&display=swap">
+<link rel="stylesheet" href="../assets/zc.css">
+<link rel="icon" href="../assets/icon-180.png">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<style>
+  /* Quiz stage: a game-show board in green and gold. */
+  .qz { position: absolute; inset: 0; overflow-y: auto; background: radial-gradient(circle at 50% 0%, #17a589, #0e7c66 45%, #0a4f45); color: #fff; font-family: var(--body);
+        display: grid; place-items: center; padding: 28px 18px 64px; grid-template-columns: minmax(0, 1fr); }
+  .qz .panel { width: 100%; max-width: 440px; display: grid; gap: 16px; }
+  .qz .kicker { font-weight: 900; letter-spacing: .16em; text-transform: uppercase; font-size: 12px; color: #ffe08a; }
+  .qz h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(30px, 10cqw, 50px); line-height: 1.05; text-wrap: balance; overflow-wrap: anywhere; }
+  .qz h2 { margin: 0; font-size: clamp(22px, 7cqw, 30px); line-height: 1.2; font-weight: 900; overflow-wrap: anywhere; }
+  .qz p { margin: 0; opacity: .9; line-height: 1.45; }
+  .qz input { width: 100%; padding: 14px 16px; border-radius: 14px; border: 0; font: 600 17px var(--body); color: #0a4f45; }
+  .qz .go { border: 0; border-radius: 999px; padding: 15px 22px; font: 900 17px var(--body); background: #ffd166; color: #0a4f45; cursor: pointer; }
+  .qz .go[disabled] { opacity: .6; }
+  .qz .opts { display: grid; gap: 10px; }
+  .qz .opt { text-align: left; border: 0; border-radius: 16px; padding: 16px; font: 700 17px var(--body); background: rgba(255,255,255,.14); color: #fff; cursor: pointer;
+             border: 2px solid rgba(255,255,255,.25); overflow-wrap: anywhere; }
+  .qz .opt:hover { background: rgba(255,255,255,.22); }
+  .qz .opt.right { background: #2bb673; border-color: #2bb673; }
+  .qz .opt.wrong { background: #d64550; border-color: #d64550; }
+  .qz .progress { height: 6px; background: rgba(255,255,255,.2); border-radius: 6px; overflow: hidden; }
+  .qz .progress i { display: block; height: 100%; background: #ffd166; transition: width .3s; }
+  .qz .score { font-family: var(--display); font-size: clamp(56px, 22cqw, 110px); line-height: 1; color: #ffd166; }
+  .qz ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; counter-reset: r; }
+  .qz li { display: flex; justify-content: space-between; gap: 10px; background: rgba(255,255,255,.12); padding: 10px 14px; border-radius: 12px; counter-increment: r; font-weight: 700; }
+  .qz li::before { content: counter(r) "."; opacity: .7; margin-right: 6px; }
+  .qz li span:first-of-type { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .qz li.me { background: #ffd166; color: #0a4f45; }
+  .qz .err { color: #ffd0d4; font-weight: 700; }
+  .zc-stage { container-type: inline-size; }
+
+  /* maker: question editor */
+  .qe { display: grid; gap: 12px; }
+  .qe .q { border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 8px; background: var(--panel); }
+  .qe .q header { display: flex; justify-content: space-between; align-items: center; font-weight: 800; }
+  .qe input[type=text] { width: 100%; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--paper); }
+  .qe .o { display: flex; gap: 8px; align-items: center; }
+  .qe .o input[type=radio] { width: 20px; height: 20px; accent-color: var(--good); flex: none; }
+  .qe small { color: var(--ink-2); }
+</style>
+</head>
+<body>
+<script src="../assets/zc.js"></script>
+<script>
+(() => {
+  const SAMPLE = [
+    { q: "What's my favourite food?", options: ["Pilau", "Chips mayai", "Urojo", "Mishkaki"], correct: 2 },
+    { q: "Where would I go on holiday?", options: ["Nungwi beach", "Kilimanjaro", "Dubai", "Stay home and sleep"], correct: 0 },
+    { q: "What am I always late for?", options: ["Work", "Family dinners", "Everything", "Nothing, I'm perfect"], correct: 2 },
+    { q: "My go-to drink?", options: ["Chai", "Coffee", "Juice ya miwa", "Soda"], correct: 0 },
+    { q: "Which team do I support?", options: ["Simba", "Yanga", "Azam", "I don't watch football"], correct: 1 },
+  ];
+
+  function questionEditor(data, changed, h) {
+    const wrap = h("fieldset", {}, h("legend", { text: "Your questions" }),
+      h("small", { class: "zc-note", text: "3 to 10 questions. Tick the right answer for each. Friends never see which one is right until they answer." }));
+    const list = h("div", { class: "qe" });
+    const add = h("button", { class: "zc-btn ghost small", type: "button", text: "+ Add a question" });
+    const qs = () => (Array.isArray(data.questions) ? data.questions : (data.questions = []));
+    function draw() {
+      list.replaceChildren();
+      qs().forEach((q, i) => {
+        const opts = h("div", { style: { display: "grid", gap: "6px" } });
+        const qIn = h("input", { type: "text", maxlength: 150, value: q.q || "", placeholder: "Question " + (i + 1), "aria-label": "Question " + (i + 1) });
+        qIn.addEventListener("input", () => { q.q = qIn.value; changed(); });
+        for (let k = 0; k < 4; k++) {
+          const radio = h("input", { type: "radio", name: "c" + i, "aria-label": "Right answer", checked: q.correct === k });
+          radio.addEventListener("change", () => { q.correct = k; changed(); });
+          const oIn = h("input", { type: "text", maxlength: 80, value: (q.options || [])[k] || "", placeholder: k < 2 ? "Answer " + (k + 1) : "Answer " + (k + 1) + " (optional)", "aria-label": "Answer " + (k + 1) });
+          oIn.addEventListener("input", () => { q.options = q.options || []; q.options[k] = oIn.value; changed(); });
+          opts.append(h("label", { class: "o" }, radio, oIn));
+        }
+        const del = qs().length > 3 ? h("button", { class: "zc-btn ghost small", type: "button", text: "Remove", onclick: () => { qs().splice(i, 1); changed(); draw(); } }) : null;
+        list.append(h("div", { class: "q" }, h("header", {}, h("span", { text: "Question " + (i + 1) }), del), qIn, opts,
+          h("small", { text: "Tick the circle next to the right answer." })));
+      });
+      add.hidden = qs().length >= 10;
+    }
+    add.addEventListener("click", () => { qs().push({ q: "", options: ["", ""], correct: 0 }); changed(); draw(); });
+    draw();
+    wrap.append(list, add);
+    return wrap;
+  }
+
+  // Only answers that were filled in count; the right answer's position is kept.
+  function tidy(d) {
+    return (d.questions || []).map((q) => {
+      const opts = [], map = {};
+      (q.options || []).forEach((o, k) => { if (String(o || "").trim()) { map[k] = opts.length; opts.push(String(o).trim()); } });
+      return { q: String(q.q || "").trim(), options: opts, correct: map[q.correct] };
+    });
+  }
+
+  ZC.card({
+    type: "quiz",
+    name: "How well do you know me?",
+    lead: "Write a few questions about yourself and send the link to friends. They answer, get a score, and land on your leaderboard.",
+    defaults: { from: "", title: "", questions: SAMPLE },
+    fields: [
+      { key: "from", label: "Your name", required: true, max: 30, placeholder: "Mkali" },
+      { key: "title", label: "Quiz title", max: 60, placeholder: "How well do you know Mkali?" },
+      { type: "custom", build: questionEditor },
+    ],
+    validate(d) {
+      const qs = tidy(d);
+      if (qs.length < 3) return "Add at least 3 questions.";
+      for (let i = 0; i < qs.length; i++) {
+        if (!qs[i].q) return "Question " + (i + 1) + " is empty.";
+        if (qs[i].options.length < 2) return "Question " + (i + 1) + " needs at least 2 answers.";
+        if (qs[i].correct === undefined) return "Tick the right answer for question " + (i + 1) + ".";
+      }
+      d.questions = qs;
+      return null;
+    },
+    title: (d) => d.title || "How well do you know " + (d.from || "me") + "?",
+    shareText: (d) => (d.title || "How well do you know " + (d.from || "me") + "?") + " Take my quiz 👉",
+    cover: false,
+
+    render(root, d, ctx) {
+      const { h } = ctx;
+      const qs = tidy(d).filter((q) => q.q && q.options.length >= 2);
+      const title = d.title || "How well do you know " + (d.from || "me") + "?";
+      const panel = h("div", { class: "panel" });
+      root.append(h("div", { class: "qz" }, panel));
+      const answers = [];
+      let player = "";
+      try { player = ZC.store.get("zc:player", ""); } catch (_) {}
+
+      function intro() {
+        const name = h("input", { type: "text", maxlength: 30, placeholder: "Your name", value: player, "aria-label": "Your name" });
+        const err = h("div", { class: "err", "aria-live": "polite" });
+        const go = h("button", { class: "go", type: "button", text: "Start the quiz" });
+        go.addEventListener("click", () => {
+          if (!name.value.trim()) { err.textContent = "Type your name so it shows on the leaderboard."; name.focus(); return; }
+          player = name.value.trim(); ZC.store.set("zc:player", player); answers.length = 0; ask(0);
+        });
+        panel.replaceChildren(h("div", { class: "kicker", text: qs.length + " questions" }), h("h1", { text: title }),
+          h("p", { text: "Answer honestly. You'll see your score and where you rank among " + (d.from || "their") + " friends." }),
+          name, err, go);
+        if (!ctx.preview) loadBoard(panel, null);
+      }
+      function ask(i) {
+        if (i >= qs.length) return finish();
+        const q = qs[i];
+        const opts = h("div", { class: "opts" });
+        q.options.forEach((o, k) => opts.append(h("button", { class: "opt", type: "button", text: o, onclick: () => {
+          answers[i] = k;
+          if (ctx.sound.on) ctx.sound.tone(520 + k * 60, 0, 0.12, 0.06);
+          ask(i + 1);
+        } })));
+        panel.replaceChildren(h("div", { class: "progress" }, h("i", { style: { width: (i / qs.length) * 100 + "%" } })),
+          h("div", { class: "kicker", text: "Question " + (i + 1) + " of " + qs.length }), h("h2", { text: q.q }), opts);
+      }
+      async function finish() {
+        panel.replaceChildren(h("div", { class: "zc-spinner", style: { justifySelf: "center" } }));
+        let score, total = qs.length, review, board = [];
+        if (ctx.preview || !ctx.cardId) {
+          review = qs.map((q, i) => ({ correct: q.correct, right: answers[i] === q.correct }));
+          score = review.filter((r) => r.right).length;
+          board = [{ name: player + " (preview)", score, total, id: -1 }];
+        } else {
+          const r = await ctx.api("POST", "/" + ctx.cardId + "/answers", { name: player, answers });
+          if (!r.ok) { panel.replaceChildren(h("h2", { text: "Could not send your answers" }), h("p", { text: r.message }), h("button", { class: "go", type: "button", text: "Try again", onclick: finish })); return; }
+          ({ score, total, review } = r.data); board = r.data.leaderboard; board.me = r.data.id;
+        }
+        const pct = score / total;
+        if (pct >= 0.6) ctx.confetti({ colors: ["#ffd166", "#ffffff", "#2bb673"], count: 120 });
+        if (ctx.sound.on) pct >= 0.6 ? ctx.sound.chime() : ctx.sound.tone(220, 0, 0.4, 0.08, "sawtooth");
+        const verdict = pct === 1 ? "Perfect! You really know " + (d.from || "them") + "." : pct >= 0.6 ? "Not bad at all." : pct >= 0.3 ? "Hmm… you should hang out more." : "Do you even know " + (d.from || "them") + "? 😅";
+        const reviewList = h("div", { class: "opts" }, qs.map((q, i) => h("div", { class: "opt " + (review[i].right ? "right" : "wrong") },
+          q.q + " → " + q.options[review[i].correct])));
+        panel.replaceChildren(h("div", { class: "kicker", text: player + ", you scored" }),
+          h("div", { class: "score", text: score + "/" + total }), h("h2", { text: verdict }));
+        renderBoard(panel, board, board.me);
+        panel.append(h("details", {}, h("summary", { text: "See the right answers", style: { cursor: "pointer", fontWeight: 800 } }), reviewList),
+          h("a", { class: "go", href: ZC.SITE_ROOT + "quiz/", text: "Make your own quiz", style: { textAlign: "center", textDecoration: "none" } }));
+      }
+      async function loadBoard(where) {
+        const r = await ctx.api("GET", "/" + ctx.cardId + "/leaderboard");
+        if (r.ok && r.data.leaderboard.length) renderBoard(where, r.data.leaderboard, null);
+      }
+      function renderBoard(where, rows, me) {
+        if (!rows || !rows.length) return;
+        where.append(h("div", { class: "kicker", text: "Leaderboard" }),
+          h("ol", {}, rows.slice(0, 10).map((r) => h("li", { class: r.id === me ? "me" : "" }, h("span", { text: r.name }), h("span", { text: r.score + "/" + r.total })))));
+      }
+      intro();
+      return { destroy() {} };
+    },
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2b2118">
+<title>Official Certificate · Zenji Cards</title>
+<meta name="description" content="Fun certificates and awards: World's Okayest Dad, Best Roommate, Certified Coffee Addict. Save as an image or PDF.">
+<meta property="og:title" content="You've been awarded a certificate 🏅">
+<meta property="og:description" content="It's official.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Figtree:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,700;0,900;1,500&family=Great+Vibes&display=swap">
+<link rel="stylesheet" href="../assets/zc.css">
+<link rel="icon" href="../assets/icon-180.png">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<style>
+  /* Certificate stage: the certificate on a dark wooden desk, with save buttons under it. */
+  .cert { position: absolute; inset: 0; background: radial-gradient(circle at 50% 30%, #4a3a2c, #2b2118 75%); display: grid; grid-template-rows: 1fr auto; gap: 12px;
+          padding: 18px 16px 52px; font-family: var(--body); }
+  .cert .paper { min-height: 0; position: relative; }
+  .cert canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 18px 30px rgba(0,0,0,.45)); }
+  .cert .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .cert .actions button { border: 0; border-radius: 999px; padding: 12px 20px; font-weight: 800; cursor: pointer; background: #f4d27a; color: #2b2118; }
+  .cert .actions button.alt { background: transparent; color: #f4e9d8; border: 1.5px solid rgba(244,233,216,.4); }
+  .cert .note { text-align: center; color: #e6d7c3; font-size: 13px; min-height: 18px; }
+  @media print {
+    body * { visibility: hidden !important; }
+    .print-only, .print-only * { visibility: visible !important; }
+    .print-only { position: fixed; inset: 0; display: grid !important; place-items: center; background: #fff; }
+    .print-only img { width: 100%; height: auto; }
+    @page { size: A4 portrait; margin: 8mm; }
+  }
+  .print-only { display: none; }
+</style>
+</head>
+<body>
+<script src="../assets/zc.js"></script>
+<script>
+(() => {
+  const AWARDS = [
+    ["World's Okayest Dad", "World's Okayest Dad"],
+    ["World's Best Mum", "World's Best Mum"],
+    ["Best Roommate 2026", "Best Roommate 2026"],
+    ["Certified Coffee Addict", "Certified Coffee Addict"],
+    ["Chai Master", "Chai Master"],
+    ["Employee of the Month", "Employee of the Month"],
+    ["Most Likely to Be Late", "Most Likely to Be Late"],
+    ["Best Friend Award", "Best Friend Award"],
+    ["custom", "Write my own award"],
+  ];
+  const THEMES = [["gold", "Classic gold"], ["kanga", "Kanga colours"], ["mint", "Fresh mint"]];
+  const W = 1240, H = 1754; // A4 portrait at 150 dpi
+
+  ZC.card({
+    type: "certificate",
+    name: "Official certificate",
+    lead: "A very serious certificate for very important achievements. They can save it as an image, print it, or turn it into a PDF.",
+    defaults: { award: "World's Okayest Dad", custom: "", to: "", reason: "For outstanding achievement in dad jokes, remote-control guarding and saying “ask your mother”.",
+                date: new Date().toISOString().slice(0, 10), by: "", byTitle: "The Family Committee", theme: "gold" },
+    fields: [
+      { key: "award", label: "Award", type: "select", options: AWARDS },
+      { key: "custom", label: "Your own award", max: 50, placeholder: "Only if you picked “Write my own award”" },
+      { key: "to", label: "Awarded to", required: true, max: 40, placeholder: "Baba Juma" },
+      { key: "reason", label: "For", type: "textarea", rows: 3, max: 200, required: true },
+      { type: "row", fields: [
+        { key: "by", label: "Signed by", max: 30, placeholder: "Your name" },
+        { key: "byTitle", label: "Their title", max: 40 },
+      ] },
+      { type: "row", fields: [
+        { key: "date", label: "Date", type: "date" },
+        { key: "theme", label: "Design", type: "select", options: THEMES },
+      ] },
+    ],
+    validate: (d) => (d.award === "custom" && !String(d.custom || "").trim() ? "Write your award, or pick one from the list." : null),
+    title: (d) => (d.award === "custom" ? d.custom : d.award) + " · " + (d.to || ""),
+    shareText: (d) => "Congratulations " + (d.to || "") + "! You've officially been awarded: " + (d.award === "custom" ? d.custom : d.award) + " 🏅",
+    cover: false,
+    footDark: false,
+
+    render(root, d, ctx) {
+      const { h } = ctx;
+      const canvas = h("canvas", { width: W, height: H, role: "img", "aria-label": "Certificate for " + (d.to || "") });
+      const note = h("div", { class: "note", "aria-live": "polite" });
+      const save = h("button", { type: "button", text: "Save image" });
+      const print = h("button", { class: "alt", type: "button", text: "Print or PDF" });
+      const box = h("div", { class: "cert" }, h("div", { class: "paper" }, canvas), h("div", {}, h("div", { class: "actions" }, save, print), note));
+      root.append(box);
+      const g = canvas.getContext("2d");
+      const award = d.award === "custom" ? (d.custom || "Certificate of Awesome") : d.award;
+      const T = {
+        gold: { paper: "#fbf6ea", ink: "#3b2b17", accent: "#b8860b", accent2: "#e2c275", seal: "#b8860b", ribbon: "#8b1e2e" },
+        kanga: { paper: "#fff8ee", ink: "#2a1846", accent: "#e8457c", accent2: "#ffb000", seal: "#e8457c", ribbon: "#2bb673" },
+        mint: { paper: "#f2fbf7", ink: "#123a33", accent: "#1f8a6c", accent2: "#8fd6bd", seal: "#1f8a6c", ribbon: "#235789" },
+      }[d.theme] || null;
+      const th = T || { paper: "#fbf6ea", ink: "#3b2b17", accent: "#b8860b", accent2: "#e2c275", seal: "#b8860b", ribbon: "#8b1e2e" };
+
+      function wrap(text, x, y, maxW, lh, maxLines) {
+        const words = String(text).split(/\s+/); let line = "", lines = [];
+        for (const w of words) { const t = line ? line + " " + w : w; if (g.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+        if (line) lines.push(line);
+        lines = lines.slice(0, maxLines);
+        lines.forEach((l, i) => g.fillText(l, x, y + i * lh));
+        return lines.length;
+      }
+      function fit(text, font, size, maxW) { let s = size; do { g.font = font.replace("{s}", s); s -= 4; } while (g.measureText(text).width > maxW && s > 30); }
+
+      function draw() {
+        g.fillStyle = th.paper; g.fillRect(0, 0, W, H);
+        // borders
+        g.strokeStyle = th.accent; g.lineWidth = 14; g.strokeRect(50, 50, W - 100, H - 100);
+        g.strokeStyle = th.accent2; g.lineWidth = 4; g.strokeRect(84, 84, W - 168, H - 168);
+        // corner ornaments
+        g.fillStyle = th.accent;
+        [[84, 84], [W - 84, 84], [84, H - 84], [W - 84, H - 84]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 22, 0, 7); g.fill(); });
+        if (d.theme === "kanga") { // kanga border pattern
+          g.fillStyle = th.accent2;
+          for (let x = 120; x < W - 120; x += 46) { g.beginPath(); g.arc(x, 120, 8, 0, 7); g.arc(x, H - 120, 8, 0, 7); g.fill(); }
+        }
+        g.textAlign = "center"; g.fillStyle = th.ink;
+        g.font = "800 34px Figtree, sans-serif"; g.letterSpacing = "10px";
+        g.fillText("CERTIFICATE OF ACHIEVEMENT", W / 2, 250);
+        g.letterSpacing = "0px";
+        g.fillStyle = th.accent; fit(award, "900 {s}px 'Playfair Display', Georgia, serif", 96, W - 260);
+        const awardLines = wrap(award, W / 2, 400, W - 260, 104, 2);
+        let y = 400 + awardLines * 104 + 40;
+        g.fillStyle = th.ink; g.font = "italic 500 40px 'Playfair Display', Georgia, serif";
+        g.fillText("is proudly presented to", W / 2, y); y += 150;
+        g.fillStyle = th.ink; fit(d.to || "Your Name", "400 {s}px 'Great Vibes', cursive", 150, W - 240);
+        g.fillText(d.to || "Your Name", W / 2, y);
+        g.strokeStyle = th.accent2; g.lineWidth = 3; g.beginPath(); g.moveTo(260, y + 40); g.lineTo(W - 260, y + 40); g.stroke();
+        y += 130;
+        g.fillStyle = th.ink; g.font = "500 40px Figtree, sans-serif";
+        wrap(d.reason || "", W / 2, y, W - 300, 56, 5);
+        // seal
+        const sx = W / 2, sy = H - 420;
+        g.fillStyle = th.ribbon;
+        g.beginPath(); g.moveTo(sx - 60, sy + 40); g.lineTo(sx - 100, sy + 210); g.lineTo(sx - 50, sy + 180); g.lineTo(sx - 20, sy + 230); g.lineTo(sx, sy + 60); g.fill();
+        g.beginPath(); g.moveTo(sx + 60, sy + 40); g.lineTo(sx + 100, sy + 210); g.lineTo(sx + 50, sy + 180); g.lineTo(sx + 20, sy + 230); g.lineTo(sx, sy + 60); g.fill();
+        g.fillStyle = th.seal;
+        g.beginPath(); for (let k = 0; k < 40; k++) { const a = (k / 40) * Math.PI * 2, r = k % 2 ? 100 : 112; g.lineTo(sx + Math.cos(a) * r, sy + Math.sin(a) * r); } g.closePath(); g.fill();
+        g.strokeStyle = th.paper; g.lineWidth = 4; g.beginPath(); g.arc(sx, sy, 80, 0, 7); g.stroke();
+        g.fillStyle = th.paper; g.font = "900 30px 'Playfair Display', Georgia, serif"; g.fillText("OFFICIAL", sx, sy - 4);
+        g.font = "800 22px Figtree, sans-serif"; g.fillText(String(d.date || "").slice(0, 4) || "★", sx, sy + 30);
+        // signature and date
+        const by = H - 330;
+        g.textAlign = "left"; g.fillStyle = th.ink;
+        g.font = "400 64px 'Great Vibes', cursive"; g.fillText(d.by || "", 170, by);
+        g.strokeStyle = th.ink; g.lineWidth = 2; g.beginPath(); g.moveTo(170, by + 20); g.lineTo(470, by + 20); g.stroke();
+        g.font = "600 28px Figtree, sans-serif"; g.fillText(d.byTitle || "Signed", 170, by + 64);
+        g.textAlign = "right";
+        let dateText = d.date || "";
+        try { if (d.date) dateText = new Date(d.date + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }); } catch (_) {}
+        g.font = "600 36px Figtree, sans-serif"; g.fillText(dateText, W - 170, by);
+        g.strokeStyle = th.ink; g.beginPath(); g.moveTo(W - 470, by + 20); g.lineTo(W - 170, by + 20); g.stroke();
+        g.font = "600 28px Figtree, sans-serif"; g.fillText("Date", W - 170, by + 64);
+        g.textAlign = "center"; g.font = "600 22px Figtree, sans-serif"; g.fillStyle = th.accent;
+        g.fillText("zenjishoppazz.com", W / 2, H - 120);
+      }
+      draw();
+      // Redraw when the fancy fonts have arrived.
+      if (document.fonts) {
+        Promise.all(["900 40px 'Playfair Display'", "italic 500 40px 'Playfair Display'", "400 40px 'Great Vibes'", "800 30px Figtree"].map((f) => document.fonts.load(f).catch(() => {})))
+          .then(draw);
+      }
+
+      const fileName = (award + " " + (d.to || "")).replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-") + ".png";
+      save.addEventListener("click", () => {
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const file = new File([blob], fileName, { type: "image/png" });
+          if (navigator.canShare && navigator.canShare({ files: [file] }) && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
+            navigator.share({ files: [file], title: award }).catch(() => {});
+            return;
+          }
+          const a = h("a", { href: URL.createObjectURL(blob), download: fileName });
+          document.body.append(a); a.click(); a.remove();
+          note.textContent = "Saved to your downloads.";
+        }, "image/png");
+      });
+      print.addEventListener("click", () => {
+        let p = document.querySelector(".print-only");
+        if (!p) { p = h("div", { class: "print-only" }); document.body.append(p); }
+        p.replaceChildren(h("img", { src: canvas.toDataURL("image/png"), alt: "" }));
+        setTimeout(() => window.print(), 100);
+        note.textContent = "To make a PDF, choose “Save as PDF” in the print window.";
+      });
+      if (!ctx.preview) setTimeout(() => ctx.confetti({ colors: [th.accent, th.accent2, th.ribbon, "#ffffff"], count: 120, y: 0.35 }), 400);
+      return { destroy() {} };
+    },
+  });
+})();
+</script>
+</body>
+</html>

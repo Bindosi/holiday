@@ -1,440 +1,227 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#160f26"><title>Blow Out the Candles</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#160f26">
+<title>Blow Out the Candles · Zenji Cards</title>
+<meta name="description" content="A birthday cake with real candles: shake your phone to blow them out.">
+<meta property="og:title" content="Someone baked you a cake 🎂">
+<meta property="og:description" content="Open it, make a wish and shake your phone to blow out the candles.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Figtree:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Figtree:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/zc.css">
+<link rel="icon" href="../assets/icon-180.png">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
 <style>
-  /* Layout: one dark party room, the cake in the middle, words above and a hint below. Deliberately single-theme (night). */
-  :root {
-    --night: #160f26;
-    --night-2: #2a1846;
-    --cream: #fff4e6;
-    --icing: #ffd3e2;
-    --gold: #ffc65c;
-    --muted: #c9b8e8;
-    --display: "Shrikhand", "Cooper Black", Georgia, serif;
-    --body: "Figtree", "Segoe UI", system-ui, sans-serif;
-    color-scheme: dark;
-  }
-  [hidden] { display: none !important; }
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    background: radial-gradient(120% 80% at 50% 70%, var(--night-2), var(--night) 70%);
-    color: var(--cream);
-    font-family: var(--body);
-    overflow: hidden;
-    -webkit-user-select: none; user-select: none;
-    touch-action: manipulation;
-  }
-  .stage {
-    position: relative;
-    height: 100%;
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    padding-left: max(16px, env(safe-area-inset-left, 0px));
-    padding-right: max(16px, env(safe-area-inset-right, 0px));
-    padding-block: 18px 22px;
-    box-sizing: border-box;
-  }
-  header { text-align: center; display: grid; gap: 6px; z-index: 2; }
-  .eyebrow { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
-  h1 {
-    margin: 0;
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: clamp(34px, 9vw, 64px);
-    line-height: 1.05;
-    color: var(--gold);
-    text-wrap: balance;
-    text-shadow: 0 0 24px rgba(255, 198, 92, .35);
-  }
-  h1 .name { color: var(--icing); display: block; }
-  canvas { width: 100%; height: 100%; display: block; min-height: 0; }
-  .hint {
-    text-align: center; z-index: 2; display: grid; gap: 10px; justify-items: center;
-    min-height: 92px;
-  }
-  .hint p { margin: 0; font-size: 17px; font-weight: 600; max-width: 34ch; line-height: 1.35; }
-  .hint small { color: var(--muted); font-size: 14px; }
-  button {
-    font: 700 16px var(--body);
-    color: var(--night);
-    background: var(--gold);
-    border: 0; border-radius: 999px;
-    padding: 14px 26px;
-    cursor: pointer;
-    box-shadow: 0 6px 24px rgba(255, 198, 92, .35);
-  }
-  button.ghost { background: transparent; color: var(--cream); box-shadow: none; border: 1.5px solid rgba(255,244,230,.35); padding: 10px 20px; font-size: 14px; }
-  button:focus-visible { outline: 3px solid var(--icing); outline-offset: 3px; }
-
-  /* Start screen */
-  .intro {
-    position: absolute; inset: 0; z-index: 5;
-    display: grid; place-items: center; text-align: center;
-    padding-left: max(24px, env(safe-area-inset-left, 0px));
-    padding-right: max(24px, env(safe-area-inset-right, 0px));
-    background: rgba(22, 15, 38, .82);
-    backdrop-filter: blur(4px);
-  }
-  .intro .box { display: grid; gap: 18px; justify-items: center; max-width: 360px; }
-  .intro .gift { font-family: var(--display); font-size: clamp(30px, 8vw, 46px); color: var(--icing); line-height: 1.1; margin: 0; }
-  .intro p { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.45; }
-  .wish { animation: pop .6s cubic-bezier(.2,1.6,.4,1) both; }
-  @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .wish { animation: none; } }
-</style></head><body>
-
-<div class="stage">
-  <header>
-    <div class="eyebrow" id="eyebrow">Make a wish</div>
-    <h1 id="title">Happy Birthday<span class="name" id="name"></span></h1>
-  </header>
-  <canvas id="cake" aria-label="A birthday cake with lit candles"></canvas>
-  <div class="hint" id="hint" aria-live="polite"></div>
-
-  <div class="intro" id="intro">
-    <div class="box">
-      <p class="gift" id="introTitle">Someone baked you a cake</p>
-      <p>Turn your sound on, make a wish, then shake your phone (or tap the cake) to blow out the candles.</p>
-      <button id="start">Light the candles</button>
-    </div>
-  </div>
-</div>
-
+  /* Birthday stage: a dark party room, cake in the middle. */
+  .bd { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr auto; color: #fff4e6; font-family: var(--body);
+        background: radial-gradient(120% 80% at 50% 70%, #2a1846, #160f26 70%); overflow: hidden; -webkit-user-select: none; user-select: none; }
+  .bd header { text-align: center; display: grid; gap: 4px; padding: 6% 16px 0; z-index: 2; }
+  .bd .eyebrow { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #c9b8e8; font-weight: 800; }
+  .bd h1 { margin: 0; font-family: var(--display); font-weight: 400; line-height: 1.05; color: #ffc65c; text-wrap: balance;
+           font-size: clamp(26px, 9cqw, 58px); text-shadow: 0 0 24px rgba(255,198,92,.35); }
+  .bd h1 .name { color: #ffd3e2; display: block; }
+  .bd canvas { width: 100%; height: 100%; display: block; min-height: 0; touch-action: manipulation; }
+  .bd .hint { text-align: center; padding: 0 16px 12%; min-height: 70px; display: grid; gap: 8px; justify-items: center; z-index: 2; }
+  .bd .hint p { margin: 0; font-weight: 700; font-size: 16px; max-width: 32ch; }
+  .bd .hint small { color: #c9b8e8; }
+  .bd .note { position: absolute; left: 50%; bottom: 14%; transform: translateX(-50%); width: min(88%, 380px); z-index: 4;
+              background: #fff4e6; color: #2a1846; border-radius: 18px; padding: 18px; display: grid; gap: 10px; text-align: center;
+              box-shadow: 0 18px 40px rgba(0,0,0,.4); animation: bd-pop .6s cubic-bezier(.2,1.5,.4,1) both; }
+  .bd .note img { width: 100%; max-height: 180px; object-fit: cover; border-radius: 12px; }
+  .bd .note p { margin: 0; font-size: 16px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .bd .note .from { font-family: var(--display); color: #e8457c; font-size: 18px; }
+  .bd .again { background: transparent; color: #2a1846; border: 1.5px solid rgba(42,24,70,.25); border-radius: 999px; padding: 8px 16px; font-weight: 700; cursor: pointer; justify-self: center; }
+  @keyframes bd-pop { from { transform: translate(-50%, 20px) scale(.9); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .bd .note { animation: none; } }
+  .zc-stage { container-type: inline-size; }
+</style>
+</head>
+<body>
+<script src="../assets/zc.js"></script>
 <script>
 (() => {
-  // ---------- Who it's for ----------
-  // Works with any of: page.html#Amina   page.html#Amina-5   page.html?name=Amina&age=5
-  const params = new URLSearchParams(location.search);
-  let raw = "";
-  try { raw = decodeURIComponent((location.hash || "").slice(1)); } catch (_) {}
-  if (params.get("name")) raw = params.get("name").trim().replace(/\s+/g, "-") + (params.get("age") ? "-" + params.get("age") : "");
-  raw = raw.replace(/^\/+|\/+$/g, "");
-  const m = raw.match(/^([\p{L}\p{N}-]*?)(?:-(\d{1,3}))?$/u);
-  const name = m && m[1] ? m[1].replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : "";
-  const age = m && m[2] ? parseInt(m[2], 10) : 0;
-  if (name) {
-    document.getElementById("name").textContent = name;
-    document.getElementById("introTitle").textContent = name + ", someone baked you a cake";
-    document.title = "Happy Birthday " + name;
-  }
-  const candleCount = age > 0 && age <= 9 ? age : 7;
+  const TUNE = [ // "Happy Birthday to You" (traditional), as [note, beats]
+    ["G4", .75], ["G4", .25], ["A4", 1], ["G4", 1], ["C5", 1], ["B4", 2],
+    ["G4", .75], ["G4", .25], ["A4", 1], ["G4", 1], ["D5", 1], ["C5", 2],
+    ["G4", .75], ["G4", .25], ["G5", 1], ["E5", 1], ["C5", 1], ["B4", 1], ["A4", 2],
+    ["F5", .75], ["F5", .25], ["E5", 1], ["C5", 1], ["D5", 1], ["C5", 2.5]];
+  const FREQ = { G4: 392, A4: 440, B4: 493.9, C5: 523.3, D5: 587.3, E5: 659.3, F5: 698.5, G5: 784 };
+  const COLORS = ["#7fd1ff", "#ff9ec4", "#ffe07a", "#9ff0c1", "#c7a6ff"];
 
-  const canvas = document.getElementById("cake");
-  const ctx = canvas.getContext("2d");
-  const hint = document.getElementById("hint");
-  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let W = 0, H = 0, dpr = 1;
+  ZC.card({
+    type: "birthday",
+    name: "Blow out the candles",
+    lead: "A cake with real candles. They open it, make a wish and shake their phone to blow the candles out. Then your message appears.",
+    defaults: { to: "", age: "", message: "Happy birthday! Wishing you a year full of good things.", from: "" },
+    fields: [
+      { key: "to", label: "Their name", required: true, max: 30, placeholder: "Mkali" },
+      { type: "row", fields: [
+        { key: "age", label: "Age", type: "number", min: 1, maxValue: 120, help: "1 to 9 shows that many candles" },
+        { key: "from", label: "From", max: 40, placeholder: "Your name" },
+      ] },
+      { key: "message", label: "Your message", type: "textarea", max: 400, required: true, help: "Shown after the candles go out." },
+    ],
+    photos: 1,
+    photoLabel: "Photo for the message (optional)",
+    title: (d) => "Happy Birthday " + (d.to || ""),
+    shareText: (d) => "Happy birthday " + (d.to || "") + "! 🎂 Open this and make a wish:",
+    coverTitle: (d) => (d.to ? d.to + ", someone" : "Someone") + " baked you a cake",
+    coverText: () => "Turn your sound on, make a wish, then shake your phone (or tap the cake) to blow out the candles.",
+    coverButton: "Light the candles",
+    // Old free links: #Mkali or #Mkali-5
+    legacy(hash) {
+      let raw = ""; try { raw = decodeURIComponent(hash); } catch (_) { return null; }
+      const m = raw.replace(/^\/+|\/+$/g, "").match(/^([\p{L}\p{N}-]*?)(?:-(\d{1,3}))?$/u);
+      if (!m || !m[1]) return null;
+      return { to: m[1].replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()), age: m[2] ? Number(m[2]) : "", message: "", from: "" };
+    },
 
-  function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const r = canvas.getBoundingClientRect();
-    W = r.width; H = r.height;
-    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    layoutCandles();
-  }
+    render(root, d, ctx) {
+      const { h } = ctx;
+      const age = Number(d.age) || 0;
+      const n = age >= 1 && age <= 9 ? age : 7;
+      const nameEl = h("span", { class: "name", text: d.to || "" });
+      const eyebrow = h("div", { class: "eyebrow", text: "Make a wish" });
+      const canvas = h("canvas", { "aria-label": "A birthday cake with lit candles" });
+      const hint = h("div", { class: "hint", "aria-live": "polite" });
+      const box = h("div", { class: "bd" }, h("header", {}, eyebrow, h("h1", {}, "Happy Birthday", nameEl)), canvas, hint);
+      root.append(box);
+      const g = canvas.getContext("2d");
+      let W = 0, H = 0, raf = 0, wind = 0, windDir = 1, done = false, started = false;
+      const candles = Array.from({ length: n }, (_, i) => ({ lit: true, flame: 1, lean: 0, phase: Math.random() * 6.28, color: COLORS[i % 5], x: 0, y: 0, h: 0 }));
+      const smoke = [];
+      let cake = { cx: 0, top: 0, w: 0, h: 0 };
 
-  // ---------- Candles ----------
-  const candles = [];
-  const candleColors = ["#7fd1ff", "#ff9ec4", "#ffe07a", "#9ff0c1", "#c7a6ff"];
-  for (let i = 0; i < candleCount; i++) {
-    candles.push({ lit: true, flame: 1, lean: 0, phase: Math.random() * 6.28, color: candleColors[i % candleColors.length], x: 0, y: 0, h: 0 });
-  }
-  let cake = { cx: 0, top: 0, w: 0, h: 0 };
-  function layoutCandles() {
-    const w = Math.min(W * 0.78, 360);
-    const h = w * 0.5;
-    cake = { cx: W / 2, top: H * 0.5 + h * 0.05, w, h };
-    const span = w * 0.74;
-    candles.forEach((c, i) => {
-      const t = candles.length === 1 ? 0.5 : i / (candles.length - 1);
-      c.x = cake.cx - span / 2 + span * t;
-      // slight arc so they sit on the oval top
-      const dx = (t - 0.5) * 2;
-      c.y = cake.top + (1 - dx * dx) * w * 0.035 + w * 0.02;
-      c.h = w * 0.2 + (i % 2) * w * 0.02;
-    });
-  }
-
-  // ---------- Particles: smoke and confetti ----------
-  const smoke = [], confetti = [];
-  function puff(c) {
-    for (let i = 0; i < 9; i++) {
-      smoke.push({ x: c.x, y: c.y - c.h, vx: (Math.random() - .5) * .5 + c.lean * .6, vy: -0.6 - Math.random() * .7, r: 3 + Math.random() * 3, life: 1 });
-    }
-  }
-  function party() {
-    const colors = ["#ffc65c", "#ff9ec4", "#7fd1ff", "#9ff0c1", "#c7a6ff", "#fff4e6"];
-    const n = reduceMotion ? 40 : 160;
-    for (let i = 0; i < n; i++) {
-      confetti.push({
-        x: W / 2 + (Math.random() - .5) * 40, y: H * 0.45,
-        vx: (Math.random() - .5) * 9, vy: -6 - Math.random() * 7,
-        s: 4 + Math.random() * 5, rot: Math.random() * 6.28, vr: (Math.random() - .5) * .3,
-        color: colors[i % colors.length], life: 1,
-      });
-    }
-  }
-
-  // ---------- Drawing ----------
-  function roundRect(x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
-  }
-  function drawCake(glow) {
-    const { cx, top, w, h } = cake;
-    const x = cx - w / 2;
-    // plate
-    ctx.fillStyle = "rgba(255,244,230,.12)";
-    ctx.beginPath(); ctx.ellipse(cx, top + h + 8, w * 0.62, w * 0.09, 0, 0, Math.PI * 2); ctx.fill();
-    // two layers
-    const layers = [
-      { y: top + h * 0.48, hh: h * 0.52, ww: w, base: "#8a4fc9", band: "#ffd3e2" },
-      { y: top, hh: h * 0.5, ww: w * 0.86, base: "#b46bdc", band: "#fff4e6" },
-    ];
-    layers.forEach((L) => {
-      const lx = cx - L.ww / 2;
-      const g = ctx.createLinearGradient(lx, 0, lx + L.ww, 0);
-      g.addColorStop(0, shade(L.base, -18)); g.addColorStop(.5, L.base); g.addColorStop(1, shade(L.base, -28));
-      ctx.fillStyle = g; roundRect(lx, L.y, L.ww, L.hh, 14); ctx.fill();
-      // icing drips
-      ctx.fillStyle = L.band;
-      ctx.beginPath(); ctx.moveTo(lx, L.y + 10);
-      const drips = 9;
-      for (let i = 0; i <= drips; i++) {
-        const px = lx + (L.ww / drips) * i;
-        const depth = 10 + ((i * 37) % 3) * 7;
-        ctx.quadraticCurveTo(px - L.ww / drips / 2, L.y + depth + 8, px, L.y + 10);
+      function size() {
+        const dpr = Math.min(devicePixelRatio || 1, 2), r = canvas.getBoundingClientRect();
+        W = r.width; H = r.height; canvas.width = Math.max(1, W * dpr); canvas.height = Math.max(1, H * dpr);
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const w = Math.min(W * 0.78, H * 0.95, 360), ch = w * 0.5;
+        cake = { cx: W / 2, top: H * 0.48 + ch * 0.05, w, h: ch };
+        const span = w * 0.74;
+        candles.forEach((c, i) => {
+          const t = n === 1 ? 0.5 : i / (n - 1), dx = (t - 0.5) * 2;
+          c.x = cake.cx - span / 2 + span * t; c.y = cake.top + (1 - dx * dx) * w * 0.035 + w * 0.02; c.h = w * 0.2 + (i % 2) * w * 0.02;
+        });
       }
-      ctx.lineTo(lx + L.ww, L.y + 4); ctx.lineTo(lx + L.ww, L.y); ctx.lineTo(lx, L.y); ctx.closePath(); ctx.fill();
-      roundRect(lx, L.y - 2, L.ww, 14, 10); ctx.fill();
-      // sprinkles
-      for (let i = 0; i < 14; i++) {
-        const sx = lx + 14 + ((i * 53) % (L.ww - 28));
-        const sy = L.y + 26 + ((i * 29) % Math.max(8, L.hh - 36));
-        ctx.save(); ctx.translate(sx, sy); ctx.rotate(i);
-        ctx.fillStyle = candleColors[i % candleColors.length];
-        roundRect(-4, -1.5, 8, 3, 1.5); ctx.fill(); ctx.restore();
+      const ro = new ResizeObserver(size); ro.observe(canvas);
+
+      const rr = (x, y, w, hh, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + hh, r); g.arcTo(x + w, y + hh, x, y + hh, r); g.arcTo(x, y + hh, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      const shade = (hex, a) => { const v = parseInt(hex.slice(1), 16); const f = (x) => Math.max(0, Math.min(255, x + a)); return `rgb(${f(v >> 16)},${f((v >> 8) & 255)},${f(v & 255)})`; };
+
+      function drawCake(glow) {
+        const { cx, top, w, h: ch } = cake;
+        g.fillStyle = "rgba(255,244,230,.12)"; g.beginPath(); g.ellipse(cx, top + ch + 8, w * 0.62, w * 0.09, 0, 0, 7); g.fill();
+        [{ y: top + ch * 0.48, hh: ch * 0.52, ww: w, base: "#8a4fc9", band: "#ffd3e2" }, { y: top, hh: ch * 0.5, ww: w * 0.86, base: "#b46bdc", band: "#fff4e6" }].forEach((L) => {
+          const lx = cx - L.ww / 2, gr = g.createLinearGradient(lx, 0, lx + L.ww, 0);
+          gr.addColorStop(0, shade(L.base, -18)); gr.addColorStop(.5, L.base); gr.addColorStop(1, shade(L.base, -28));
+          g.fillStyle = gr; rr(lx, L.y, L.ww, L.hh, 14); g.fill();
+          g.fillStyle = L.band; g.beginPath(); g.moveTo(lx, L.y + 10);
+          for (let i = 0; i <= 9; i++) { const px = lx + (L.ww / 9) * i; g.quadraticCurveTo(px - L.ww / 18, L.y + 18 + ((i * 37) % 3) * 7, px, L.y + 10); }
+          g.lineTo(lx + L.ww, L.y); g.lineTo(lx, L.y); g.closePath(); g.fill(); rr(lx, L.y - 2, L.ww, 14, 10); g.fill();
+          for (let i = 0; i < 14; i++) {
+            g.save(); g.translate(lx + 14 + ((i * 53) % Math.max(1, L.ww - 28)), L.y + 26 + ((i * 29) % Math.max(8, L.hh - 36))); g.rotate(i);
+            g.fillStyle = COLORS[i % 5]; rr(-4, -1.5, 8, 3, 1.5); g.fill(); g.restore();
+          }
+        });
+        if (glow > 0) {
+          const gr = g.createRadialGradient(cx, top, 10, cx, top, w * 0.9);
+          gr.addColorStop(0, `rgba(255,198,92,${0.28 * glow})`); gr.addColorStop(1, "rgba(255,198,92,0)");
+          g.fillStyle = gr; g.beginPath(); g.arc(cx, top, w * 0.9, 0, 7); g.fill();
+        }
       }
-    });
-    // warm light on the cake while candles burn
-    if (glow > 0) {
-      const g = ctx.createRadialGradient(cx, top, 10, cx, top, w * 0.9);
-      g.addColorStop(0, `rgba(255,198,92,${0.28 * glow})`); g.addColorStop(1, "rgba(255,198,92,0)");
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, top, w * 0.9, 0, Math.PI * 2); ctx.fill();
-    }
-  }
-  function shade(hex, amt) {
-    const n = parseInt(hex.slice(1), 16);
-    const r = Math.max(0, Math.min(255, (n >> 16) + amt)), g = Math.max(0, Math.min(255, ((n >> 8) & 255) + amt)), b = Math.max(0, Math.min(255, (n & 255) + amt));
-    return `rgb(${r},${g},${b})`;
-  }
-  function drawCandle(c, t) {
-    const cw = Math.max(8, cake.w * 0.032);
-    // body with stripes
-    ctx.save();
-    roundRect(c.x - cw / 2, c.y - c.h, cw, c.h, 3); ctx.fillStyle = c.color; ctx.fill(); ctx.clip();
-    ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 3;
-    for (let y = c.y - c.h - cw; y < c.y; y += 9) { ctx.beginPath(); ctx.moveTo(c.x - cw, y); ctx.lineTo(c.x + cw, y + 7); ctx.stroke(); }
-    ctx.restore();
-    // wick
-    ctx.strokeStyle = "#3b2a2a"; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(c.x, c.y - c.h); ctx.lineTo(c.x, c.y - c.h - 7); ctx.stroke();
-    if (c.flame <= 0.02) return;
-    // flame
-    const flick = reduceMotion ? 1 : 1 + Math.sin(t * 0.012 + c.phase) * 0.08 + Math.sin(t * 0.031 + c.phase * 2) * 0.05;
-    const fh = cw * 2.6 * c.flame * flick;
-    const fw = cw * 0.9 * c.flame;
-    const bx = c.x, by = c.y - c.h - 6;
-    const tipX = bx + c.lean * fh * 0.9;
-    // halo
-    const halo = ctx.createRadialGradient(bx, by - fh * .5, 1, bx, by - fh * .5, fh * 2.2);
-    halo.addColorStop(0, `rgba(255,190,90,${.35 * c.flame})`); halo.addColorStop(1, "rgba(255,190,90,0)");
-    ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(bx, by - fh * .5, fh * 2.2, 0, Math.PI * 2); ctx.fill();
-    // outer flame
-    const g = ctx.createLinearGradient(bx, by, bx, by - fh);
-    g.addColorStop(0, "#ff7a1a"); g.addColorStop(.55, "#ffc65c"); g.addColorStop(1, "#fff6d8");
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.moveTo(bx, by + 2);
-    ctx.bezierCurveTo(bx - fw, by - fh * .2, bx - fw * .6 + c.lean * fh * .4, by - fh * .7, tipX, by - fh);
-    ctx.bezierCurveTo(bx + fw * .6 + c.lean * fh * .4, by - fh * .7, bx + fw, by - fh * .2, bx, by + 2);
-    ctx.fill();
-    // blue core
-    ctx.fillStyle = "rgba(120,170,255,.75)";
-    ctx.beginPath(); ctx.ellipse(bx, by - fh * .12, fw * .28, fh * .16, 0, 0, Math.PI * 2); ctx.fill();
-  }
-
-  // ---------- Loop ----------
-  let wind = 0;           // 0..1 how hard it's blowing right now
-  let windDir = 1;
-  let done = false;
-  function frame(t) {
-    ctx.clearRect(0, 0, W, H);
-    wind *= 0.9;
-    const litShare = candles.filter(c => c.lit).length / candles.length;
-    drawCake(litShare);
-    candles.forEach((c) => {
-      const targetLean = c.lit ? windDir * wind * 0.9 : 0;
-      c.lean += (targetLean - c.lean) * 0.25;
-      const targetFlame = c.lit ? 1 - wind * 0.45 : 0;
-      c.flame += (targetFlame - c.flame) * (c.lit ? 0.2 : 0.35);
-      drawCandle(c, t);
-    });
-    // smoke
-    for (let i = smoke.length - 1; i >= 0; i--) {
-      const p = smoke[i];
-      p.x += p.vx + Math.sin((t + i * 90) * 0.004) * 0.3; p.y += p.vy; p.r += 0.18; p.life -= 0.012;
-      if (p.life <= 0) { smoke.splice(i, 1); continue; }
-      ctx.fillStyle = `rgba(220,215,235,${p.life * 0.35})`;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
-    }
-    // confetti
-    for (let i = confetti.length - 1; i >= 0; i--) {
-      const p = confetti[i];
-      p.vy += 0.22; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-      if (p.y > H + 20) { confetti.splice(i, 1); continue; }
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-      ctx.fillStyle = p.color; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore();
-    }
-    requestAnimationFrame(frame);
-  }
-
-  // ---------- Blowing ----------
-  function gust(strength) {
-    if (done) return;
-    wind = Math.min(1, wind + strength);
-    windDir = Math.random() < 0.5 ? -1 : 1;
-    // a strong gust puts out 1-3 candles
-    if (strength > 0.45) {
-      const lit = candles.filter(c => c.lit);
-      const n = Math.min(lit.length, strength > 0.85 ? 3 : strength > 0.65 ? 2 : 1);
-      for (let i = 0; i < n; i++) {
-        const c = lit.splice(Math.floor(Math.random() * lit.length), 1)[0];
-        c.lit = false; puff(c); fizz();
+      function drawCandle(c, t) {
+        const cw = Math.max(8, cake.w * 0.032);
+        g.save(); rr(c.x - cw / 2, c.y - c.h, cw, c.h, 3); g.fillStyle = c.color; g.fill(); g.clip();
+        g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 3;
+        for (let y = c.y - c.h - cw; y < c.y; y += 9) { g.beginPath(); g.moveTo(c.x - cw, y); g.lineTo(c.x + cw, y + 7); g.stroke(); }
+        g.restore();
+        g.strokeStyle = "#3b2a2a"; g.lineWidth = 2; g.beginPath(); g.moveTo(c.x, c.y - c.h); g.lineTo(c.x, c.y - c.h - 7); g.stroke();
+        if (c.flame <= 0.02) return;
+        const fl = ctx.reduceMotion ? 1 : 1 + Math.sin(t * 0.012 + c.phase) * 0.08 + Math.sin(t * 0.031 + c.phase * 2) * 0.05;
+        const fh = cw * 2.6 * c.flame * fl, fw = cw * 0.9 * c.flame, bx = c.x, by = c.y - c.h - 6, tip = bx + c.lean * fh * 0.9;
+        const halo = g.createRadialGradient(bx, by - fh * .5, 1, bx, by - fh * .5, fh * 2.2);
+        halo.addColorStop(0, `rgba(255,190,90,${.35 * c.flame})`); halo.addColorStop(1, "rgba(255,190,90,0)");
+        g.fillStyle = halo; g.beginPath(); g.arc(bx, by - fh * .5, fh * 2.2, 0, 7); g.fill();
+        const gr = g.createLinearGradient(bx, by, bx, by - fh);
+        gr.addColorStop(0, "#ff7a1a"); gr.addColorStop(.55, "#ffc65c"); gr.addColorStop(1, "#fff6d8"); g.fillStyle = gr;
+        g.beginPath(); g.moveTo(bx, by + 2);
+        g.bezierCurveTo(bx - fw, by - fh * .2, bx - fw * .6 + c.lean * fh * .4, by - fh * .7, tip, by - fh);
+        g.bezierCurveTo(bx + fw * .6 + c.lean * fh * .4, by - fh * .7, bx + fw, by - fh * .2, bx, by + 2); g.fill();
+        g.fillStyle = "rgba(120,170,255,.75)"; g.beginPath(); g.ellipse(bx, by - fh * .12, fw * .28, fh * .16, 0, 0, 7); g.fill();
       }
-      const left = candles.filter(c => c.lit).length;
-      if (left === 0) celebrate();
-      else setHint(left === 1 ? "One left! Shake again" : `${left} candles left. Keep shaking!`);
-    }
-  }
-
-  let lastAcc = null, lastGustAt = 0, motionSeen = false;
-  function onMotion(e) {
-    const a = e.accelerationIncludingGravity || e.acceleration;
-    if (!a || a.x == null) return;
-    motionSeen = true;
-    if (lastAcc) {
-      const d = Math.abs(a.x - lastAcc.x) + Math.abs(a.y - lastAcc.y) + Math.abs(a.z - lastAcc.z);
-      const now = performance.now();
-      if (d > 6) wind = Math.min(1, wind + d / 120); // gentle sway makes the flames lean
-      if (d > 22 && now - lastGustAt > 380) {
-        lastGustAt = now;
-        gust(Math.min(1, 0.35 + d / 60));
+      function frame(t) {
+        g.clearRect(0, 0, W, H); wind *= 0.9;
+        drawCake(candles.filter((c) => c.lit).length / n);
+        candles.forEach((c) => {
+          c.lean += ((c.lit ? windDir * wind * 0.9 : 0) - c.lean) * 0.25;
+          c.flame += ((c.lit ? 1 - wind * 0.45 : 0) - c.flame) * (c.lit ? 0.2 : 0.35);
+          drawCandle(c, t);
+        });
+        for (let i = smoke.length - 1; i >= 0; i--) {
+          const p = smoke[i]; p.x += p.vx + Math.sin((t + i * 90) * 0.004) * 0.3; p.y += p.vy; p.r += 0.18; p.life -= 0.012;
+          if (p.life <= 0) { smoke.splice(i, 1); continue; }
+          g.fillStyle = `rgba(220,215,235,${p.life * 0.35})`; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7); g.fill();
+        }
+        raf = requestAnimationFrame(frame);
       }
-    }
-    lastAcc = { x: a.x, y: a.y, z: a.z };
-  }
+      raf = requestAnimationFrame(frame);
 
-  // ---------- Words ----------
-  function setHint(text, small) {
-    hint.innerHTML = "";
-    const p = document.createElement("p"); p.textContent = text; hint.appendChild(p);
-    if (small) { const s = document.createElement("small"); s.textContent = small; hint.appendChild(s); }
-  }
-  function showTapFallback() {
-    if (done) return;
-    setHint("Tap the cake to blow out the candles", "Shaking only works on a phone in the browser");
-  }
-  function celebrate() {
-    done = true;
-    party();
-    playChord();
-    document.getElementById("eyebrow").textContent = "Your wish is on its way";
-    setHint("Yay! All out. May every wish come true.");
-    const again = document.createElement("button");
-    again.className = "ghost wish"; again.textContent = "Light them again";
-    again.addEventListener("click", relight);
-    hint.appendChild(again);
-    if (navigator.vibrate) navigator.vibrate([60, 40, 120]);
-  }
-  function relight() {
-    candles.forEach(c => { c.lit = true; });
-    done = false;
-    document.getElementById("eyebrow").textContent = "Make a wish";
-    setHint(motionSeen ? "Make a wish, then shake your phone" : "Make a wish, then tap the cake");
-  }
-
-  // Tap or click on the cake = a puff of breath (fallback and desktop).
-  canvas.addEventListener("pointerdown", () => { if (!started) return; gust(0.55 + Math.random() * 0.25); });
-
-  // ---------- Sound (Web Audio, nothing to download) ----------
-  let audio = null;
-  function tone(freq, start, dur, vol = 0.18, type = "triangle") {
-    const o = audio.createOscillator(), g = audio.createGain();
-    o.type = type; o.frequency.value = freq;
-    g.gain.setValueAtTime(0, start);
-    g.gain.linearRampToValueAtTime(vol, start + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0008, start + dur);
-    o.connect(g).connect(audio.destination); o.start(start); o.stop(start + dur + 0.05);
-  }
-  function playSong() {
-    if (!audio) return;
-    // "Happy Birthday to You" (traditional), music-box style.
-    const N = { C4: 261.6, G4: 392, A4: 440, B4: 493.9, C5: 523.3, D5: 587.3, E5: 659.3, F5: 698.5, G5: 784 };
-    const beat = 0.42;
-    const song = [
-      ["G4", .75], ["G4", .25], ["A4", 1], ["G4", 1], ["C5", 1], ["B4", 2],
-      ["G4", .75], ["G4", .25], ["A4", 1], ["G4", 1], ["D5", 1], ["C5", 2],
-      ["G4", .75], ["G4", .25], ["G5", 1], ["E5", 1], ["C5", 1], ["B4", 1], ["A4", 2],
-      ["F5", .75], ["F5", .25], ["E5", 1], ["C5", 1], ["D5", 1], ["C5", 2.5],
-    ];
-    let t = audio.currentTime + 0.15;
-    song.forEach(([n, b]) => { tone(N[n], t, b * beat * 1.6, 0.16); tone(N[n] * 2, t, b * beat * 0.8, 0.03, "sine"); t += b * beat; });
-  }
-  function fizz() {
-    if (!audio) return;
-    const len = 0.25, buf = audio.createBuffer(1, audio.sampleRate * len, audio.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
-    const s = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
-    f.type = "highpass"; f.frequency.value = 1800; g.gain.value = 0.12;
-    s.buffer = buf; s.connect(f).connect(g).connect(audio.destination); s.start();
-  }
-  function playChord() {
-    if (!audio) return;
-    const t = audio.currentTime + 0.05;
-    [523.3, 659.3, 784, 1046.5].forEach((f, i) => tone(f, t + i * 0.09, 1.6, 0.12));
-  }
-
-  // ---------- Start (needs a tap: sound and motion permission) ----------
-  let started = false;
-  document.getElementById("start").addEventListener("click", async () => {
-    started = true;
-    try { audio = new (window.AudioContext || window.webkitAudioContext)(); await audio.resume(); } catch (_) { audio = null; }
-    let motionAllowed = typeof DeviceMotionEvent !== "undefined";
-    try {
-      if (motionAllowed && typeof DeviceMotionEvent.requestPermission === "function") {
-        motionAllowed = (await DeviceMotionEvent.requestPermission()) === "granted";
+      function say(text, small) { hint.replaceChildren(h("p", { text }), small ? h("small", { text: small }) : ""); }
+      function fizz() {
+        if (!ctx.sound.on) return;
+        ctx.sound.tone(2400, 0, 0.18, 0.05, "sawtooth");
       }
-    } catch (_) { motionAllowed = false; }
-    if (motionAllowed) window.addEventListener("devicemotion", onMotion);
+      function gust(strength) {
+        if (done || !started) return;
+        wind = Math.min(1, wind + strength); windDir = Math.random() < 0.5 ? -1 : 1;
+        if (strength <= 0.45) return;
+        const lit = candles.filter((c) => c.lit);
+        const k = Math.min(lit.length, strength > 0.85 ? 3 : strength > 0.65 ? 2 : 1);
+        for (let i = 0; i < k; i++) {
+          const c = lit.splice(Math.floor(Math.random() * lit.length), 1)[0]; c.lit = false; fizz();
+          for (let j = 0; j < 9; j++) smoke.push({ x: c.x, y: c.y - c.h, vx: (Math.random() - .5) * .5, vy: -0.6 - Math.random() * .7, r: 3 + Math.random() * 3, life: 1 });
+        }
+        const left = candles.filter((c) => c.lit).length;
+        if (left === 0) celebrate();
+        else say(left === 1 ? "One left!" : left + " candles left. Keep going!");
+      }
+      function celebrate() {
+        done = true;
+        ctx.confetti();
+        if (ctx.sound.on) ctx.sound.chime();
+        if (!ctx.preview && navigator.vibrate) navigator.vibrate([60, 40, 120]);
+        eyebrow.textContent = "Your wish is on its way";
+        hint.replaceChildren();
+        const note = h("div", { class: "note" },
+          ctx.photos[0] ? h("img", { src: ctx.photos[0], alt: "" }) : null,
+          d.message ? h("p", { text: d.message }) : h("p", { text: "May every wish come true." }),
+          d.from ? h("div", { class: "from", text: "— " + d.from }) : null,
+          h("button", { class: "again", type: "button", text: "Light them again", onclick: () => {
+            note.remove(); candles.forEach((c) => (c.lit = true)); done = false; eyebrow.textContent = "Make a wish"; say(prompt());
+          } }));
+        box.append(note);
+      }
+      const prompt = () => (ctx.motionWorks ? "Make a wish, then shake your phone" : "Make a wish, then tap the cake");
 
-    document.getElementById("intro").hidden = true;
-    playSong();
-    setHint("Make a wish, then shake your phone to blow out the candles");
-    // If no motion arrives (laptop, or the browser blocks it), offer tapping instead.
-    setTimeout(() => { if (!motionSeen) showTapFallback(); }, 1800);
+      canvas.addEventListener("pointerdown", () => gust(0.55 + Math.random() * 0.25));
+      const offShake = ctx.onShake((s) => { if (s.sway > 6) wind = Math.min(1, wind + s.sway / 120); if (s.big) gust(Math.min(1, 0.35 + s.sway / 60)); });
+
+      function playTune() {
+        if (!ctx.sound.on) return;
+        let t = 0.15; TUNE.forEach(([nn, b]) => { ctx.sound.tone(FREQ[nn], t, b * 0.67, 0.15); ctx.sound.tone(FREQ[nn] * 2, t, b * 0.34, 0.03, "sine"); t += b * 0.42; });
+      }
+      return {
+        start() { started = true; say(ctx.preview ? "Tap the cake to try it" : "Make a wish, then shake your phone to blow out the candles"); playTune(); },
+        motionChecked(ok) { if (!ok && !done) say("Tap the cake to blow out the candles", "Shaking works on phones that allow motion"); },
+        destroy() { cancelAnimationFrame(raf); ro.disconnect(); offShake(); },
+      };
+    },
   });
-
-  window.addEventListener("hashchange", () => location.reload());
-  window.addEventListener("resize", resize);
-  resize();
-  requestAnimationFrame(frame);
 })();
 </script>
-</body></html>
+</body>
+</html>

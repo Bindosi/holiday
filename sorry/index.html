@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f3efe6">
+<title>A Garden of Sorry · Zenji Cards</title>
+<meta name="description" content="An apology that grows flowers as they scroll.">
+<meta property="og:title" content="I'm sorry 🌷">
+<meta property="og:description" content="Please read this. Scroll slowly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,400&family=Figtree:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/zc.css">
+<link rel="icon" href="../assets/icon-180.png">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<style>
+  /* Sorry stage: a soft page that scrolls; a garden at the bottom grows with every line read. */
+  .sorry { position: absolute; inset: 0; background: #f3efe6; color: #2d2a24; font-family: var(--body); }
+  .sorry .scroller { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+  .sorry .page { display: grid; gap: 0; padding: 0 22px 46%; }
+  .sorry section { min-height: 62%; min-height: 62cqh; display: grid; place-items: center; text-align: center; padding: 30px 0; }
+  .sorry section:first-child { min-height: 92cqh; }
+  .sorry .line { font-family: "Fraunces", Georgia, serif; font-size: clamp(22px, 7cqw, 34px); line-height: 1.3; max-width: 22ch; opacity: .12; transform: translateY(14px);
+                 transition: opacity .8s, transform .8s; overflow-wrap: anywhere; white-space: pre-wrap; }
+  .sorry .line.seen { opacity: 1; transform: none; }
+  .sorry .line em { color: #b5485d; font-style: italic; }
+  .sorry .hello { font-family: "Fraunces", Georgia, serif; font-size: clamp(30px, 10cqw, 48px); color: #b5485d; font-style: italic; margin: 0; }
+  .sorry .down { margin-top: 18px; font-weight: 700; font-size: 14px; color: #8a8174; animation: s-bob 1.6s ease-in-out infinite; }
+  .sorry .ask { display: grid; gap: 16px; justify-items: center; }
+  .sorry .ask .buttons { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .sorry .ask button { border: 0; border-radius: 999px; padding: 14px 24px; font-weight: 800; font-size: 16px; cursor: pointer; }
+  .sorry .ask .y { background: #b5485d; color: #fff; }
+  .sorry .ask .n { background: #fff; color: #5c554a; border: 1.5px solid #ddd3c2; }
+  .sorry .reply { font-family: "Fraunces", Georgia, serif; font-size: 22px; color: #b5485d; min-height: 1.4em; }
+  .sorry .from { font-weight: 800; color: #8a8174; }
+  .sorry img.photo { width: min(70%, 260px); border-radius: 18px; box-shadow: 0 12px 30px rgba(45,42,36,.15); }
+  .sorry canvas { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 42%; pointer-events: none; }
+  @keyframes s-bob { 50% { transform: translateY(6px); } }
+  @media (prefers-reduced-motion: reduce) { .sorry .line { transition: none; } .sorry .down { animation: none; } .sorry .scroller { scroll-behavior: auto; } }
+  .zc-stage { container-type: size; }
+</style>
+</head>
+<body>
+<script src="../assets/zc.js"></script>
+<script>
+(() => {
+  ZC.card({
+    type: "sorry",
+    name: "A garden of sorry",
+    lead: "Say sorry one line at a time. As they scroll, each line appears and a little garden grows. At the end you ask: forgive me?",
+    defaults: {
+      to: "", from: "",
+      lines: ["I was wrong, and I know it.", "I'm sorry I hurt you.", "You mean more to me than being right."],
+      ask: "Will you forgive me?",
+    },
+    fields: [
+      { type: "row", fields: [
+        { key: "to", label: "Their name", required: true, max: 30, placeholder: "Amina" },
+        { key: "from", label: "From", max: 40, placeholder: "Your name" },
+      ] },
+      { key: "lines", label: "What you want to say, one line each", type: "list", max: 140, maxItems: 7, placeholder: "I'm sorry for…", help: "Each line gets its own moment on the screen." },
+      { key: "ask", label: "The last question", max: 60, required: true },
+    ],
+    photos: 1,
+    photoLabel: "Photo at the end (optional)",
+    title: (d) => "For " + (d.to || "you"),
+    shareText: (d) => (d.to ? d.to + ", " : "") + "please read this 🌷",
+    cover: false,
+    footDark: true,
+
+    render(root, d, ctx) {
+      const { h } = ctx;
+      const lines = (d.lines || []).map((s) => String(s || "").trim()).filter(Boolean);
+      const canvas = h("canvas", { "aria-hidden": "true" });
+      const reply = h("div", { class: "reply", "aria-live": "polite" });
+      const yesBtn = h("button", { class: "y", type: "button", text: "Yes, I forgive you" });
+      const noBtn = h("button", { class: "n", type: "button", text: "Not yet" });
+      const page = h("div", { class: "page" },
+        h("section", {}, h("div", {}, h("p", { class: "hello", text: "Dear " + (d.to || "you") + "," }), h("div", { class: "down", text: "Scroll slowly ↓" }))),
+        lines.map((l) => h("section", {}, h("div", { class: "line", text: l }))),
+        h("section", {}, h("div", { class: "ask" },
+          ctx.photos[0] ? h("img", { class: "photo", src: ctx.photos[0], alt: "" }) : null,
+          h("div", { class: "line", text: d.ask || "Will you forgive me?" }),
+          h("div", { class: "buttons" }, noBtn, yesBtn), reply,
+          d.from ? h("div", { class: "from", text: "— " + d.from }) : null)));
+      const scroller = h("div", { class: "scroller" }, page);
+      const box = h("div", { class: "sorry" }, scroller, canvas);
+      root.append(box);
+
+      // Lines fade in as they reach the middle of the screen.
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) e.target.classList.add("seen"); }),
+        { root: scroller, threshold: 0.6 });
+      page.querySelectorAll(".line").forEach((el) => io.observe(el));
+
+      // Garden: flowers grow with how far they have read.
+      const g = canvas.getContext("2d");
+      let W = 0, H = 0, raf = 0, progress = 0, shown = 0, bloomAll = 0;
+      const PETALS = ["#e88ca5", "#f4b183", "#b5485d", "#f7d26b", "#c6a7e8", "#f29cb4", "#e9a0a0"];
+      const flowers = Array.from({ length: 9 }, (_, i) => ({ x: (i + 0.5) / 9 + (Math.random() - 0.5) * 0.05, h: 0.45 + Math.random() * 0.45, c: PETALS[i % PETALS.length], at: (i / 9) * 0.85, sway: Math.random() * 6 }));
+      function size() {
+        const dpr = Math.min(devicePixelRatio || 1, 2), r = canvas.getBoundingClientRect();
+        W = r.width; H = r.height; canvas.width = Math.max(1, W * dpr); canvas.height = Math.max(1, H * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      const ro = new ResizeObserver(size); ro.observe(canvas);
+      scroller.addEventListener("scroll", () => {
+        const max = scroller.scrollHeight - scroller.clientHeight;
+        progress = Math.max(progress, max > 0 ? scroller.scrollTop / max : 1);
+      }, { passive: true });
+      function flower(f, grow, bloom, t) {
+        const x = f.x * W, base = H, top = H - f.h * H * grow;
+        const sway = ctx.reduceMotion ? 0 : Math.sin(t * 0.0015 + f.sway) * 4 * grow;
+        g.strokeStyle = "#6b8f5e"; g.lineWidth = 3; g.lineCap = "round";
+        g.beginPath(); g.moveTo(x, base); g.quadraticCurveTo(x - 8, (base + top) / 2, x + sway, top); g.stroke();
+        if (grow > 0.35) {
+          g.fillStyle = "#7fa66f"; g.beginPath(); g.ellipse(x - 8, base - (base - top) * 0.4, 9 * grow, 4 * grow, -0.6, 0, 7); g.fill();
+        }
+        if (bloom <= 0) return;
+        const r = Math.min(W / 18, 22) * bloom;
+        g.fillStyle = f.c;
+        for (let k = 0; k < 6; k++) {
+          const a = (k / 6) * Math.PI * 2 + t * 0.0002;
+          g.beginPath(); g.ellipse(x + sway + Math.cos(a) * r * 0.7, top + Math.sin(a) * r * 0.7, r * 0.6, r * 0.38, a, 0, 7); g.fill();
+        }
+        g.fillStyle = "#f7d26b"; g.beginPath(); g.arc(x + sway, top, r * 0.35, 0, 7); g.fill();
+      }
+      function frame(t) {
+        shown += (Math.max(progress, bloomAll) - shown) * 0.05;
+        g.clearRect(0, 0, W, H);
+        const grass = g.createLinearGradient(0, H * .75, 0, H); grass.addColorStop(0, "rgba(127,166,111,0)"); grass.addColorStop(1, "rgba(127,166,111,.35)");
+        g.fillStyle = grass; g.fillRect(0, H * .75, W, H * .25);
+        flowers.forEach((f) => {
+          const local = Math.max(0, Math.min(1, (shown - f.at) / 0.25));
+          if (local <= 0) return;
+          flower(f, Math.min(1, local * 1.4), Math.max(0, (local - 0.55) / 0.45), t);
+        });
+        raf = requestAnimationFrame(frame);
+      }
+      raf = requestAnimationFrame(frame);
+
+      yesBtn.addEventListener("click", () => {
+        bloomAll = 1; reply.textContent = "Thank you. I won't take it for granted.";
+        ctx.confetti({ colors: PETALS, count: 90, y: 0.6 });
+        if (!ctx.preview) { ZC.unlockAudio(); ctx.sound.chime(); }
+        yesBtn.disabled = noBtn.disabled = true;
+      });
+      noBtn.addEventListener("click", () => { reply.textContent = "That's fair. I'll keep showing you I mean it."; });
+
+      return {
+        destroy() { cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); },
+      };
+    },
+  });
+})();
+</script>
+</body>
+</html>

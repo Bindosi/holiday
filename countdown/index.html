@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1724">
+<title>Countdown · Zenji Cards</title>
+<meta name="description" content="A live countdown to a birthday, wedding or trip, or a count of days since you met.">
+<meta property="og:title" content="The countdown is on ⏳">
+<meta property="og:description" content="Tap to see how long is left.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Figtree:wght@400;600;700;800;900&display=swap">
+<link rel="stylesheet" href="../assets/zc.css">
+<link rel="icon" href="../assets/icon-180.png">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<style>
+  /* Countdown stage: a photo (or warm gradient) with big live numbers on top. */
+  .cd { position: absolute; inset: 0; overflow: hidden; color: #fff; font-family: var(--body); display: grid; place-items: center; text-align: center;
+        background: linear-gradient(160deg, #1d2b64, #f8577a); padding: 24px 16px 60px; grid-template-columns: minmax(0, 1fr); }
+  .cd .bg { position: absolute; inset: 0; background: center/cover no-repeat; }
+  .cd .bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,14,25,.35), rgba(10,14,25,.72)); }
+  .cd .inner { position: relative; display: grid; gap: 16px; justify-items: center; width: 100%; max-width: 520px; justify-self: center; min-width: 0; }
+  .cd .kicker { font-weight: 900; letter-spacing: .16em; text-transform: uppercase; font-size: 12px; opacity: .9; }
+  .cd h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(30px, 10cqw, 56px); line-height: 1.05; text-wrap: balance; overflow-wrap: anywhere; text-shadow: 0 4px 20px rgba(0,0,0,.35); }
+  .cd .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; }
+  .cd .unit { min-width: 0; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); border-radius: 16px; padding: 12px 4px; backdrop-filter: blur(6px); }
+  .cd .unit b { display: block; font-size: clamp(30px, 11cqw, 58px); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+  .cd .unit span { font-size: clamp(9px, 2.7cqw, 12px); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .85; }
+  .cd .when { font-weight: 700; opacity: .9; }
+  .cd .msg { margin: 0; max-width: 34ch; font-size: 16px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .cd .from { font-family: var(--display); }
+  .cd .today { font-family: var(--display); font-size: clamp(36px, 13cqw, 70px); color: #ffd166; }
+  .zc-stage { container-type: inline-size; }
+</style>
+</head>
+<body>
+<script src="../assets/zc.js"></script>
+<script>
+(() => {
+  function pad(n) { return String(n).padStart(2, "0"); }
+  function inAMonth() {
+    const d = new Date(Date.now() + 30 * 864e5); d.setHours(18, 0, 0, 0);
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T18:00";
+  }
+
+  ZC.card({
+    type: "countdown",
+    name: "Countdown",
+    lead: "One link that counts down to a birthday, wedding or trip, or counts up the days since you met. Confetti when the moment arrives.",
+    defaults: { mode: "to", title: "Our trip to Zanzibar", date: inAMonth(), message: "Pack light. Bring sunscreen.", from: "", tzo: new Date().getTimezoneOffset() },
+    fields: [
+      { key: "mode", label: "Type", type: "select", options: [["to", "Count down to a day"], ["since", "Count up since a day"]] },
+      { key: "title", label: "What is it?", required: true, max: 60, placeholder: "Our wedding, Mkali turns 30, Since we met…" },
+      { key: "date", label: "Date and time", type: "datetime-local", required: true },
+      { key: "message", label: "Message (optional)", type: "textarea", rows: 2, max: 240 },
+      { key: "from", label: "From", max: 40 },
+    ],
+    photos: 1,
+    photoLabel: "Background photo (optional)",
+    noBranding: true,
+    // Keep the maker's time zone so "18:00" means 18:00 where they are.
+    validate: (d) => { d.tzo = new Date().getTimezoneOffset(); return isNaN(Date.parse(d.date)) ? "Pick a date and time." : null; },
+    title: (d) => d.title || "Countdown",
+    shareText: (d) => (d.title || "The countdown") + " ⏳",
+    cover: false,
+
+    render(root, d, ctx) {
+      const { h } = ctx;
+      // "2027-02-14T18:00" typed in the maker's zone -> exact moment.
+      const local = Date.parse((d.date || "") + ":00Z");
+      const target = isNaN(local) ? Date.now() : local + (Number(d.tzo) || 0) * 60000;
+      const since = d.mode === "since";
+      const nums = ["days", "hours", "minutes", "seconds"].map((u) => { const b = h("b", { text: "0" }); return { b, el: h("div", { class: "unit" }, b, h("span", { text: u })) }; });
+      const grid = h("div", { class: "grid", "aria-live": "off" }, nums.map((n) => n.el));
+      const when = h("div", { class: "when" });
+      const inner = h("div", { class: "inner" },
+        h("div", { class: "kicker", text: since ? "Counting since" : "Counting down to" }),
+        h("h1", { text: d.title || "" }), grid, when,
+        d.message ? h("p", { class: "msg", text: d.message }) : null,
+        d.from ? h("div", { class: "from", text: "— " + d.from }) : null);
+      const bg = h("div", { class: "bg" });
+      if (ctx.photos[0]) bg.style.backgroundImage = `url("${ctx.photos[0]}")`;
+      root.append(h("div", { class: "cd" }, bg, inner));
+      try {
+        when.textContent = new Date(target).toLocaleString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+      } catch (_) {}
+
+      let celebrated = false;
+      function tick() {
+        let ms = since ? Date.now() - target : target - Date.now();
+        if (!since && ms <= 0) {
+          ms = 0;
+          if (!celebrated) {
+            celebrated = true;
+            grid.replaceWith(h("div", { class: "today", text: "It's here! 🎉" }));
+            if (Date.now() - target < 864e5 * 2 || ctx.preview) ctx.confetti({ count: 180 });
+          }
+          return;
+        }
+        ms = Math.max(0, ms);
+        const s = Math.floor(ms / 1000);
+        const parts = [Math.floor(s / 86400), Math.floor(s / 3600) % 24, Math.floor(s / 60) % 60, s % 60];
+        parts.forEach((v, i) => { nums[i].b.textContent = i === 0 ? v.toLocaleString() : pad(v); });
+      }
+      tick();
+      const timer = setInterval(tick, 1000);
+      return { destroy() { clearInterval(timer); } };
+    },
+  });
+})();
+</script>
+</body>
+</html>

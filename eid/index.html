@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1f2a">
+<title>Light the Lanterns · Zenji Cards</title>
+<meta name="description" content="An Eid card with lanterns that light up when you shake your phone.">
+<meta property="og:title" content="Eid Mubarak 🌙">
+<meta property="og:description" content="Open it and shake your phone to light the lanterns.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Figtree:wght@400;600;700;800&family=Aref+Ruqaa:wght@700&display=swap">
+<link rel="stylesheet" href="../assets/zc.css">
+<link rel="icon" href="../assets/icon-180.png">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<style>
+  /* Eid stage: night sky over Stone Town rooftops, lanterns hanging from the top. */
+  .eid { position: absolute; inset: 0; overflow: hidden; color: #fdf3d8; font-family: var(--body);
+         background: linear-gradient(#071823 0%, #0b2a38 55%, #134152 100%); -webkit-user-select: none; user-select: none; }
+  .eid canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: manipulation; }
+  .eid .words { position: absolute; left: 0; right: 0; bottom: 13%; display: grid; gap: 10px; justify-items: center; text-align: center; padding: 0 18px; z-index: 3; }
+  .eid .arabic { font-family: "Aref Ruqaa", serif; font-size: clamp(26px, 9cqw, 46px); color: #f2c14e; line-height: 1; opacity: 0; transition: opacity 1.2s; direction: rtl; }
+  .eid h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(30px, 11cqw, 60px); line-height: 1.05; color: #f2c14e;
+            text-shadow: 0 0 30px rgba(242,193,78,.45); opacity: .18; transition: opacity 1.2s; text-wrap: balance; }
+  .eid .to { font-weight: 800; font-size: 18px; color: #fdf3d8; }
+  .eid .msg { margin: 0; max-width: 34ch; line-height: 1.5; font-size: 16px; white-space: pre-wrap; overflow-wrap: anywhere; opacity: 0; transform: translateY(8px); transition: opacity 1s .4s, transform 1s .4s; }
+  .eid .from { font-family: var(--display); color: #f2c14e; opacity: 0; transition: opacity 1s .8s; }
+  .eid .hint { font-weight: 700; font-size: 15px; color: #cfe6ee; }
+  .eid.lit h1, .eid.lit .arabic { opacity: 1; }
+  .eid.lit .msg, .eid.lit .from { opacity: 1; transform: none; }
+  .eid .photo { width: 108px; height: 108px; border-radius: 50%; object-fit: cover; border: 3px solid #f2c14e; opacity: 0; transition: opacity 1s .2s; }
+  .eid.lit .photo { opacity: 1; }
+  .zc-stage { container-type: inline-size; }
+  @media (prefers-reduced-motion: reduce) { .eid * { transition: none !important; } }
+</style>
+</head>
+<body>
+<script src="../assets/zc.js"></script>
+<script>
+(() => {
+  const GREETINGS = [
+    ["Eid Mubarak", "Eid Mubarak"],
+    ["Idd Mubarak", "Idd Mubarak (Kiswahili)"],
+    ["Eid al-Fitr Mubarak", "Eid al-Fitr Mubarak"],
+    ["Eid al-Adha Mubarak", "Eid al-Adha Mubarak"],
+    ["Ramadan Kareem", "Ramadan Kareem"],
+  ];
+  const ARABIC = { "Ramadan Kareem": "رمضان كريم" };
+
+  ZC.card({
+    type: "eid",
+    name: "Light the lanterns",
+    lead: "A quiet night sky with lanterns. They shake their phone (or tap) and the lanterns light up one by one, then your Eid wishes appear.",
+    defaults: { greeting: "Eid Mubarak", to: "", message: "Taqabbalallahu minna wa minkum. May Allah accept from us and from you, and fill your home with peace.", from: "" },
+    fields: [
+      { key: "greeting", label: "Greeting", type: "select", options: GREETINGS, required: true },
+      { type: "row", fields: [
+        { key: "to", label: "To", max: 40, placeholder: "Mama, the Juma family…" },
+        { key: "from", label: "From", max: 40, placeholder: "Your name" },
+      ] },
+      { key: "message", label: "Your wishes", type: "textarea", max: 400, required: true },
+    ],
+    photos: 1,
+    photoLabel: "Family photo (optional)",
+    title: (d) => d.greeting + (d.to ? ", " + d.to : ""),
+    shareText: (d) => d.greeting + "! 🌙 Open this:",
+    coverTitle: (d) => (d.to ? d.to + ", you" : "You") + " have an Eid card",
+    coverText: () => "Turn your sound on, then shake your phone (or tap the sky) to light the lanterns.",
+    coverButton: "Open",
+
+    render(root, d, ctx) {
+      const { h } = ctx;
+      const canvas = h("canvas", { "aria-label": "Lanterns hanging in the night sky" });
+      const hint = h("div", { class: "hint", "aria-live": "polite" });
+      const arabic = h("div", { class: "arabic", text: ARABIC[d.greeting] || "عيد مبارك", "aria-hidden": "true" });
+      const words = h("div", { class: "words" },
+        ctx.photos[0] ? h("img", { class: "photo", src: ctx.photos[0], alt: "" }) : null,
+        arabic, h("h1", { text: d.greeting || "Eid Mubarak" }),
+        d.to ? h("div", { class: "to", text: d.to }) : null,
+        h("p", { class: "msg", text: d.message || "" }),
+        d.from ? h("div", { class: "from", text: "— " + d.from }) : null,
+        hint);
+      const box = h("div", { class: "eid" }, canvas, words);
+      root.append(box);
+
+      const g = canvas.getContext("2d");
+      let W = 0, H = 0, raf = 0, started = false, done = false, push = 0;
+      const COLORS = ["#f2c14e", "#e8457c", "#4fd1c5", "#f2994a", "#b388ff"];
+      const lanterns = Array.from({ length: 5 }, (_, i) => ({ i, lit: 0, target: 0, swing: 0, vel: 0, color: COLORS[i] }));
+      const stars = Array.from({ length: 90 }, () => ({ x: Math.random(), y: Math.random() * 0.62, r: Math.random() * 1.4 + 0.3, p: Math.random() * 6 }));
+
+      function size() {
+        const dpr = Math.min(devicePixelRatio || 1, 2), r = canvas.getBoundingClientRect();
+        W = r.width; H = r.height; canvas.width = Math.max(1, W * dpr); canvas.height = Math.max(1, H * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      const ro = new ResizeObserver(size); ro.observe(canvas);
+
+      function moon(x, y, r) {
+        g.save();
+        const glow = g.createRadialGradient(x, y, r * .5, x, y, r * 3); glow.addColorStop(0, "rgba(253,243,216,.25)"); glow.addColorStop(1, "rgba(253,243,216,0)");
+        g.fillStyle = glow; g.beginPath(); g.arc(x, y, r * 3, 0, 7); g.fill();
+        g.fillStyle = "#fdf3d8"; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+        g.globalCompositeOperation = "destination-out"; g.beginPath(); g.arc(x + r * .42, y - r * .18, r * .9, 0, 7); g.fill();
+        g.restore();
+      }
+      function skyline() {
+        // Stone Town rooftops and a minaret, flat silhouettes.
+        g.fillStyle = "#06141c";
+        const base = H * 0.86;
+        g.beginPath(); g.moveTo(0, H); g.lineTo(0, base);
+        const blocks = [[0, .05], [.1, .02], [.18, .07], [.3, .03], [.42, .09], [.56, .04], [.66, .06], [.8, .03], [.9, .07], [1, .04]];
+        blocks.forEach(([x, hh], i) => { const nx = blocks[i + 1] ? blocks[i + 1][0] : 1; g.lineTo(x * W, base - hh * H); g.lineTo(nx * W, base - hh * H); });
+        g.lineTo(W, H); g.closePath(); g.fill();
+        const mx = W * 0.74, mw = Math.max(10, W * 0.035), mt = base - H * 0.24;
+        g.fillRect(mx - mw / 2, mt, mw, base - mt);
+        g.beginPath(); g.ellipse(mx, mt, mw * .9, mw * .9, 0, Math.PI, 0); g.fill();
+        g.fillRect(mx - mw * .75, mt + H * .05, mw * 1.5, 4);
+        g.beginPath(); g.moveTo(mx, mt - mw * 1.8); g.lineTo(mx, mt - mw * .8); g.lineWidth = 2; g.strokeStyle = "#06141c"; g.stroke();
+        const dx = W * 0.3, dw = W * 0.16, db = base - H * 0.07;
+        g.beginPath(); g.ellipse(dx, db, dw / 2, dw / 2.4, 0, Math.PI, 0); g.fill();
+      }
+      function lantern(L, t) {
+        const n = lanterns.length;
+        const x = W * (0.14 + 0.72 * (L.i / (n - 1)));
+        const len = H * (0.12 + (L.i % 2 ? 0.08 : 0.02) + (L.i === 2 ? 0.05 : 0));
+        const s = Math.min(W, H) * 0.075;
+        const ang = L.swing + (ctx.reduceMotion ? 0 : Math.sin(t * 0.0012 + L.i) * 0.03);
+        g.save(); g.translate(x, 0); g.rotate(ang);
+        g.strokeStyle = "rgba(253,243,216,.5)"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(0, 0); g.lineTo(0, len); g.stroke();
+        g.translate(0, len);
+        if (L.lit > 0.02) {
+          const glow = g.createRadialGradient(0, s * 1.2, 2, 0, s * 1.2, s * 4.2);
+          glow.addColorStop(0, hexA(L.color, 0.5 * L.lit)); glow.addColorStop(1, hexA(L.color, 0));
+          g.fillStyle = glow; g.beginPath(); g.arc(0, s * 1.2, s * 4.2, 0, 7); g.fill();
+        }
+        // cap
+        g.fillStyle = "#c9a227"; g.beginPath(); g.moveTo(-s * .35, 0); g.lineTo(s * .35, 0); g.lineTo(s * .6, s * .45); g.lineTo(-s * .6, s * .45); g.closePath(); g.fill();
+        g.beginPath(); g.arc(0, -2, s * .12, 0, 7); g.fill();
+        // body (fanous shape)
+        const body = new Path2D();
+        body.moveTo(-s * .6, s * .45); body.lineTo(s * .6, s * .45); body.lineTo(s * .75, s * 1.4); body.lineTo(s * .45, s * 2.1);
+        body.lineTo(-s * .45, s * 2.1); body.lineTo(-s * .75, s * 1.4); body.closePath();
+        const glass = g.createLinearGradient(0, s * .45, 0, s * 2.1);
+        glass.addColorStop(0, mix("#1d3540", L.color, L.lit * .9)); glass.addColorStop(1, mix("#12252e", "#fff6d6", L.lit * .85));
+        g.fillStyle = glass; g.fill(body);
+        g.strokeStyle = "#c9a227"; g.lineWidth = 2; g.stroke(body);
+        g.beginPath(); g.moveTo(0, s * .45); g.lineTo(0, s * 2.1); g.moveTo(-s * .75, s * 1.4); g.lineTo(s * .75, s * 1.4); g.lineWidth = 1.2; g.stroke();
+        if (L.lit > 0.05) { g.fillStyle = `rgba(255,246,214,${L.lit})`; g.beginPath(); g.ellipse(0, s * 1.35, s * .12, s * .22, 0, 0, 7); g.fill(); }
+        g.fillStyle = "#c9a227"; g.beginPath(); g.moveTo(-s * .45, s * 2.1); g.lineTo(s * .45, s * 2.1); g.lineTo(0, s * 2.55); g.closePath(); g.fill();
+        g.restore();
+      }
+      function hexA(hex, a) { const v = parseInt(hex.slice(1), 16); return `rgba(${v >> 16},${(v >> 8) & 255},${v & 255},${a})`; }
+      function mix(a, b, k) {
+        const A = parseInt(a.slice(1), 16), B = parseInt(b.slice(1), 16), m = (x, y) => Math.round(x + (y - x) * Math.max(0, Math.min(1, k)));
+        return `rgb(${m(A >> 16, B >> 16)},${m((A >> 8) & 255, (B >> 8) & 255)},${m(A & 255, B & 255)})`;
+      }
+
+      function frame(t) {
+        g.clearRect(0, 0, W, H);
+        const litShare = lanterns.reduce((a, L) => a + L.lit, 0) / lanterns.length;
+        stars.forEach((s) => {
+          const tw = ctx.reduceMotion ? 1 : 0.6 + 0.4 * Math.sin(t * 0.002 + s.p);
+          g.fillStyle = `rgba(253,243,216,${(0.35 + litShare * 0.5) * tw})`; g.beginPath(); g.arc(s.x * W, s.y * H, s.r, 0, 7); g.fill();
+        });
+        moon(W * 0.8, H * 0.42, Math.min(W, H) * 0.06);
+        skyline();
+        push *= 0.92;
+        lanterns.forEach((L) => {
+          L.vel += (-L.swing * 0.04) + (Math.random() - 0.5) * push * 0.02; L.vel *= 0.94; L.swing += L.vel;
+          L.lit += (L.target - L.lit) * 0.06;
+          lantern(L, t);
+        });
+        raf = requestAnimationFrame(frame);
+      }
+      raf = requestAnimationFrame(frame);
+
+      const NOTES = [523.3, 587.3, 659.3, 784, 880];
+      function lightNext() {
+        if (!started || done) return;
+        const next = lanterns.find((L) => L.target === 0);
+        if (!next) return;
+        next.target = 1; next.vel += 0.05;
+        if (ctx.sound.on) ctx.sound.tone(NOTES[next.i], 0, 1.2, 0.12, "sine");
+        const left = lanterns.filter((L) => L.target === 0).length;
+        if (left === 0) {
+          done = true; box.classList.add("lit"); hint.textContent = "";
+          setTimeout(() => {
+            ctx.confetti({ colors: ["#f2c14e", "#fdf3d8", "#4fd1c5"], count: 110, y: 0.3 });
+            if (ctx.sound.on) ctx.sound.chime();
+          }, 500);
+        } else {
+          hint.textContent = left === 1 ? "One more lantern" : left + " lanterns to go";
+        }
+      }
+      let lastLight = 0;
+      canvas.addEventListener("pointerdown", () => { push = 1; lightNext(); });
+      const off = ctx.onShake((s) => {
+        push = Math.min(2, push + s.sway / 25);
+        const now = performance.now();
+        if (s.sway > 16 && now - lastLight > 450) { lastLight = now; lightNext(); }
+      });
+      return {
+        start() { started = true; hint.textContent = ctx.preview ? "Tap the sky to try it" : "Shake your phone gently to light the lanterns"; },
+        motionChecked(ok) { if (!ok && !done) hint.textContent = "Tap the sky to light the lanterns"; },
+        destroy() { cancelAnimationFrame(raf); ro.disconnect(); off(); },
+      };
+    },
+  });
+})();
+</script>
+</body>
+</html>

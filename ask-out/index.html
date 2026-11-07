@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffe3ec">
+<title>The Big Question · Zenji Cards</title>
+<meta name="description" content="Ask the big question. The No button runs away.">
+<meta property="og:title" content="I have a question for you 💌">
+<meta property="og:description" content="Open it. Be honest.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Figtree:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/zc.css">
+<link rel="icon" href="../assets/icon-180.png">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<style>
+  /* Ask-out stage: a pink love-letter page; the No button is a coward. */
+  .ask { position: absolute; inset: 0; overflow: hidden; background: radial-gradient(circle at 50% 30%, #fff5f8, #ffd6e3 75%); color: #3a0d22;
+         font-family: var(--body); display: grid; place-items: center; text-align: center; padding: 24px 18px 64px; -webkit-user-select: none; user-select: none; grid-template-columns: minmax(0, 1fr); }
+  .ask .inner { display: grid; gap: 18px; justify-items: center; max-width: 420px; width: 100%; }
+  .ask .envelope { width: 96px; height: 68px; position: relative; }
+  .ask .envelope svg { width: 100%; height: 100%; }
+  .ask .to { font-weight: 800; letter-spacing: .14em; text-transform: uppercase; font-size: 12px; color: #b0244f; }
+  .ask h1 { margin: 0; font-family: var(--display); font-weight: 400; color: #c2185b; font-size: clamp(30px, 10cqw, 52px); line-height: 1.08; text-wrap: balance; overflow-wrap: anywhere; }
+  .ask .buttons { position: relative; width: 100%; height: 150px; }
+  .ask button.yes, .ask button.no { position: absolute; top: 50%; border: 0; border-radius: 999px; font-weight: 800; cursor: pointer; transition: transform .15s, left .25s, top .25s; touch-action: manipulation; white-space: nowrap; }
+  .ask button.yes { left: 28%; transform: translate(-50%, -50%) scale(var(--grow, 1)); background: #e8457c; color: #fff; padding: 14px 30px; font-size: 18px; box-shadow: 0 10px 24px rgba(232,69,124,.35); z-index: 2; }
+  .ask button.no { left: 72%; transform: translate(-50%, -50%) scale(var(--shrink, 1)); background: #fff; color: #7a3c55; padding: 12px 26px; font-size: 16px; box-shadow: 0 6px 16px rgba(58,13,34,.12); }
+  .ask .tease { min-height: 22px; font-weight: 700; color: #7a3c55; }
+  .ask .yay { display: grid; gap: 14px; justify-items: center; animation: ask-pop .6s cubic-bezier(.2,1.5,.4,1) both; }
+  .ask .yay h2 { margin: 0; font-family: var(--display); font-weight: 400; color: #c2185b; font-size: clamp(34px, 12cqw, 60px); }
+  .ask .yay p { margin: 0; font-size: 17px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 34ch; }
+  .ask .plan { background: #fff; border-radius: 16px; padding: 14px 18px; display: grid; gap: 4px; box-shadow: 0 8px 20px rgba(58,13,34,.1); }
+  .ask .plan b { color: #c2185b; }
+  .ask .from { font-family: var(--display); color: #c2185b; font-size: 20px; }
+  .ask img.photo { width: 140px; height: 140px; object-fit: cover; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 8px 20px rgba(58,13,34,.15); }
+  @keyframes ask-pop { from { transform: scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .ask .yay { animation: none; } .ask button { transition: none; } }
+  .zc-stage { container-type: inline-size; }
+</style>
+</head>
+<body>
+<script src="../assets/zc.js"></script>
+<script>
+(() => {
+  const QUESTIONS = [
+    ["Will you go out with me?", "Will you go out with me?"],
+    ["Will you be my Valentine?", "Will you be my Valentine?"],
+    ["Will you marry me?", "Will you marry me?"],
+    ["Can we be friends again?", "Can we be friends again?"],
+    ["Will you go to the party with me?", "Will you go to the party with me?"],
+    ["custom", "Write my own question"],
+  ];
+  const TEASES = ["Are you sure?", "Really sure?", "Think again 🥺", "Wrong button!", "Look how big Yes is…", "You can't catch it 😄", "Last chance!", "Just press Yes ❤️"];
+
+  ZC.card({
+    type: "ask-out",
+    name: "The big question",
+    lead: "Ask them anything with a Yes and a No. The No button runs away when they try to press it. When they say yes, your plan appears.",
+    defaults: { to: "", question: "Will you go out with me?", custom: "", yes: "Yes!", no: "No", after: "I knew it! I'll pick you up.", when: "", where: "", from: "" },
+    fields: [
+      { key: "to", label: "Their name", required: true, max: 30, placeholder: "Neema" },
+      { key: "question", label: "The question", type: "select", options: QUESTIONS },
+      { key: "custom", label: "Your own question", max: 90, placeholder: "Only if you picked “Write my own question”" },
+      { key: "after", label: "What they see after Yes", type: "textarea", max: 300, required: true },
+      { type: "row", fields: [
+        { key: "when", label: "When", max: 40, placeholder: "Saturday, 7pm" },
+        { key: "where", label: "Where", max: 60, placeholder: "Forodhani Gardens" },
+      ] },
+      { key: "from", label: "From", max: 40, placeholder: "Your name" },
+    ],
+    photos: 1,
+    photoLabel: "Photo shown after Yes (optional)",
+    validate: (d) => (d.question === "custom" && !String(d.custom || "").trim() ? "Write your question, or pick one from the list." : null),
+    title: (d) => "A question for " + (d.to || "you"),
+    shareText: (d) => (d.to ? d.to + ", " : "") + "I have a question for you 💌",
+    coverTitle: (d) => (d.to ? d.to + ", I" : "I") + " have a question for you",
+    coverText: () => "Sound on. Answer honestly.",
+    coverButton: "Open",
+    footDark: true,
+
+    render(root, d, ctx) {
+      const { h } = ctx;
+      const question = d.question === "custom" ? (d.custom || "Will you go out with me?") : d.question;
+      const yes = h("button", { class: "yes", type: "button", text: d.yes || "Yes!" });
+      const no = h("button", { class: "no", type: "button", text: d.no || "No" });
+      const tease = h("div", { class: "tease", "aria-live": "polite" });
+      const area = h("div", { class: "buttons" }, yes, no);
+      const env = h("div", { class: "envelope", "aria-hidden": "true" });
+      env.innerHTML = '<svg viewBox="0 0 96 68"><rect x="2" y="2" width="92" height="64" rx="8" fill="#fff" stroke="#e8457c" stroke-width="3"/><path d="M4 6 L48 40 L92 6" fill="none" stroke="#e8457c" stroke-width="3"/><path d="M48 50c-6-5-12-8-12-14a6 6 0 0 1 12-2 6 6 0 0 1 12 2c0 6-6 9-12 14z" fill="#e8457c"/></svg>';
+      const inner = h("div", { class: "inner" }, env, h("div", { class: "to", text: d.to ? "For " + d.to : "For you" }), h("h1", { text: question }), area, tease);
+      const box = h("div", { class: "ask" }, inner);
+      root.append(box);
+      let tries = 0, done = false;
+
+      function flee(e) {
+        if (done) return;
+        if (e) e.preventDefault();
+        tries++;
+        const ar = area.getBoundingClientRect(), br = no.getBoundingClientRect();
+        // Jump somewhere else on the card (inside the whole stage, not just the button row).
+        const sr = box.getBoundingClientRect();
+        const pad = 16;
+        let x, y, guard = 0;
+        do {
+          x = pad + Math.random() * (sr.width - br.width - pad * 2) + br.width / 2;
+          y = pad + Math.random() * (sr.height - br.height - pad * 2 - 40) + br.height / 2;
+          guard++;
+        } while (guard < 20 && Math.hypot(x - (br.left - sr.left + br.width / 2), y - (br.top - sr.top + br.height / 2)) < 120);
+        no.style.position = "absolute";
+        box.append(no);
+        no.style.left = x + "px"; no.style.top = y + "px";
+        no.style.setProperty("--shrink", Math.max(0.55, 1 - tries * 0.06));
+        yes.style.setProperty("--grow", Math.min(1.9, 1 + tries * 0.12));
+        tease.textContent = TEASES[Math.min(tries - 1, TEASES.length - 1)];
+        if (ctx.sound.on) ctx.sound.tone(300 + Math.random() * 200, 0, 0.12, 0.08, "square");
+        if (tries >= 3) no.textContent = ["Nope", "Still no?", "Hmm", "Maybe…"][tries % 4];
+      }
+      no.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") flee(e); });
+      no.addEventListener("pointerdown", flee);
+      no.addEventListener("click", flee);
+      no.addEventListener("focus", () => flee());
+
+      yes.addEventListener("click", () => {
+        if (done) return;
+        done = true; no.remove();
+        ctx.confetti({ shapes: "heart", colors: ["#e8457c", "#ff8fb1", "#ffd6e3", "#c2185b"], count: 120 });
+        if (ctx.sound.on) ctx.sound.chime();
+        if (!ctx.preview && navigator.vibrate) navigator.vibrate([40, 30, 80]);
+        const plan = (d.when || d.where) ? h("div", { class: "plan" },
+          d.when ? h("div", {}, h("b", { text: "When: " }), d.when) : null,
+          d.where ? h("div", {}, h("b", { text: "Where: " }), d.where) : null) : null;
+        inner.replaceChildren(h("div", { class: "yay" },
+          ctx.photos[0] ? h("img", { class: "photo", src: ctx.photos[0], alt: "" }) : null,
+          h("h2", { text: "Yay!" }),
+          h("p", { text: d.after || "" }),
+          plan,
+          d.from ? h("div", { class: "from", text: "— " + d.from }) : null));
+      });
+
+      return { destroy() {} };
+    },
+  });
+})();
+</script>
+</body>
+</html>
