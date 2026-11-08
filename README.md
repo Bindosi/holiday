@@ -21,6 +21,14 @@ Card content and payments run on the **Zenjishoppazz server** (`/api/cards`, in 
 | `quiz/` | How well do you know me? | Friends answer, get a score, and appear on a leaderboard. The right answers stay on the server. |
 | `packs/` | 5-card pack | One payment, a code worth 5 cards. |
 
+## English lessons on WhatsApp
+
+`english/` is the landing page for **Kiingereza kwa WhatsApp** (daily English lessons inside WhatsApp): https://bindosi.github.io/holiday/english/
+
+- The lessons themselves run on the Zenjishoppazz server (`Bindosi/backend-web`, `docs/whatsapp-english.md`).
+- When the WhatsApp number is live, put it in `WA_NUMBER` near the bottom of `english/index.html` (digits only, e.g. `255712345678`). Until then the buttons say "coming soon".
+- `english/audio/` holds the lesson dialogue recordings; its README has the scripts and file names.
+
 ## How a sale works
 
 1. The buyer opens a card page, fills in the form and watches the live preview.
